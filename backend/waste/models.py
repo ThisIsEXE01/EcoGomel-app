@@ -7,6 +7,6 @@ class WasteItem(models.Model):
     code = models.CharField(max_length=200)
     recyclable = models.BooleanField()
     preparation = models.TextField()
-
-def __str__(self):
-    return self.name
+    
+    def __str__(self):
+        return self.name
