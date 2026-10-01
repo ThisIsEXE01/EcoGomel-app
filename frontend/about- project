@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ЭкоГомель — О проекте</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- ШАПКА / NAVIGATION -->
+  <!-- ШАПКА / NAVIGATION (для about_project.html) -->
+<header class="header">
+  <div class="container header__container">
+    <a href="index1.html" class="logo">
+      <span class="logo__icon">🌱</span>
+      <span class="logo__text">ЭкоГомель</span>
+    </a>
+    <nav class="nav">
+      <a href="index1.html" class="nav__link">Поиск</a>
+      <a href="map.html" class="nav__link">Карта</a>
+      <a href="about_project.html" class="nav__link active">О проекте</a>
+    </nav>
+  </div>
+</header>
+
+  <main>
+    <!-- HERO SECTION -->
+    <section class="about-hero">
+      <div class="container about-hero__container">
+        <span class="pill-badge">ЭКОЛОГИЧЕСКАЯ КУЛЬТУРА</span>
+        <h1 class="about-hero__title">Помогаем перерабатывать правильно</h1>
+        <p class="about-hero__subtitle">
+          ЭкоГомель — это открытый инструмент, призванный развенчать мифы о сложности сортировки. 
+          Мы создаем понятные инструкции, систематизируем коды маркировок и аккумулируем актуальные данные обо всех доступных точках приема вторсырья в регионах.
+        </p>
+      </div>
+    </section>
+
+    <!-- СЕКЦИЯ: КАК ЭТО РАБОТАЕТ -->
+    <section class="section container">
+      <h2 class="section-title">Как это работает</h2>
+      <div class="cards-grid">
+        <div class="card card--step">
+          <div class="step-badge">1</div>
+          <h3 class="card__title">Найдите предмет</h3>
+          <p class="card__text">Просто введите название предмета в поисковой строке или выберите код маркировки для мгновенной справки.</p>
+        </div>
+        <div class="card card--step">
+          <div class="step-badge">2</div>
+          <h3 class="card__title">Узнайте правила</h3>
+          <p class="card__text">Получите детальную пошаговую инструкцию по правильной подготовке отхода к безопасной и эффективной сдаче.</p>
+        </div>
+        <div class="card card--step">
+          <div class="step-badge">3</div>
+          <h3 class="card__title">Сдайте на переработку</h3>
+          <p class="card__text">Определите наиболее удобный специализированный пункт сбора на нашей интерактивной карте города.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- СЕКЦИЯ: НАША МИССИЯ -->
+    <section class="section container">
+      <div class="mission-grid">
+        <div class="mission-content">
+          <h2 class="section-title">Наша миссия</h2>
+          <p class="mission-text">
+            Мы стремимся значительно снизить объемы захоронения мусора на полигонах, превращая потенциальные отходы в новые ценные ресурсы. Раздельный сбор не должен оставаться прерогативой избранных.
+          </p>
+          <p class="mission-text">
+            Через просвещение и доступность точной информации ЭкоСправка формирует культуру ответственного потребления в обществе, помогая каждому горожанину сделать свой первый вклад в экологическую безопасность.
+          </p>
+        </div>
+        <div class="mission-image-wrapper">
+          <img src="images/eco-recycle-room.jpg" alt="Контейнеры для раздельного сбора отходов" class="mission-image">
+        </div>
+      </div>
+    </section>
+
+    <!-- СЕКЦИЯ: В ЦИФРАХ -->
+    <section class="section container">
+      <h2 class="section-title">В цифрах</h2>
+      <div class="cards-grid">
+        <div class="card card--stat">
+          <span class="stat-number">1</span>
+          <span class="stat-label">предметов в базе</span>
+        </div>
+        <div class="card card--stat">
+          <span class="stat-number">1</span>
+          <span class="stat-label">пунктов приёма</span>
+        </div>
+        <div class="card card--stat">
+          <span class="stat-number">1</span>
+          <span class="stat-label">пользователей в месяц</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- СЕКЦИЯ: КОМАНДА ПРОЕКТА -->
+    <section class="section container">
+      <div class="team-banner">
+        <h2 class="team-banner__title">Команда проекта</h2>
+        <p class="team-banner__text">
+          Наш гид развивается благодаря сильному эко-сообществу. Это полностью открытый, некоммерческий проект, который ежедневно обновляется силами экологов, картографов и неравнодушных волонтёров.
+        </p>
+        <button class="btn btn--primary">Стать волонтёром &rarr;</button>
+      </div>
+    </section>
+
+    <!-- СЕКЦИЯ: КОНТАКТЫ И ОБРАТНАЯ СВЯЗЬ -->
+    <section class="section container">
+      <div class="contacts-grid">
+        <!-- Левая колонка: Контакты -->
+        <div class="contacts-info">
+          <h2 class="section-title">Контакты</h2>
+          <p class="contacts-desc">
+            Есть предложения по развитию проекта или хотите интегрировать карту на свой сайт?<br>
+            Напишите нам или найдите нас в социальных сетях.
+          </p>
+          <div class="contact-item">
+            <span class="contact-label">ЭЛЕКТРОННАЯ ПОЧТА</span>
+            <a href="mailto:hello@ecogomel.ru" class="contact-email">hello@ecogomel.ru</a>
+          </div>
+        </div>
+
+        <!-- Правая колонка: Форма обратной связи -->
+        <div class="feedback-card">
+          <h3 class="feedback-title">Обратная связь</h3>
+          <form class="feedback-form">
+            <div class="form-group">
+              <label class="form-label">Имя</label>
+              <input type="text" placeholder="Как к вам обращаться" class="form-input">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Email</label>
+              <input type="email" placeholder="username@example.com" class="form-input">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Сообщение</label>
+              <textarea placeholder="Ваше предложение или вопрос..." class="form-textarea" rows="4"></textarea>
+            </div>
+            <button type="submit" class="btn btn--primary btn--full">Отправить</button>
+          </form>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ПОДВАЛ / FOOTER -->
+  <footer class="footer">
+    <div class="container footer__container">
+      <div class="footer__brand">
+        <h3>ЭкоГомель</h3>
+        <p>Удобный и понятный гид по раздельному сбору мусора и утилизации сложных отходов в вашем городе. Помогаем делать мир чище, шаг за шагом.</p>
+      </div>
+      <div class="footer__bottom">
+        <span>© 2026 ЭкоГомель. Все права защищены.</span>
+        <span>Данные актуальны на сентябрь 2026</span>
+      </div>
+    </div>
+  </footer>
+
+</body>
+</html>
