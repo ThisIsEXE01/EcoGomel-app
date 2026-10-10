@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ЭкоГомель</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+  <!-- ШАПКА / NAVIGATION -->
+  <header class="header">
+    <div class="container header__container">
+      <a href="index.html" class="logo">
+        <span class="logo__icon">
+          <img src="logo.png" alt="Логотип">
+        </span>
+        <span class="logo__text">ЭкоГомель</span>
+      </a>
+      <nav class="nav">
+        <a href="index.html" class="nav__link active">Поиск</a>
+        <a href="map.html" class="nav__link">Карта</a>
+        <a href="about_project.html" class="nav__link">О проекте</a>
+        <button id="theme-toggle" class="theme-toggle" aria-label="Переключить тему">
+          <img src="moon.png" alt="Луна">
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <!-- HERO SECTION (Главная) -->
+    <section class="hero">
+      <div class="container hero__container">
+        <h1 class="hero__title">Узнайте, как правильно утилизировать любой предмет</h1>
+        <p class="hero__subtitle">
+          Интерактивный гид по маркировкам переработки и пунктам приема вторсырья в вашем городе.
+          Сделайте раздельный сбор частью своей повседневной жизни.
+        </p>
+
+        <!-- Поисковая строка -->
+        <div class="search-bar">
+          <span class="search-bar__icon">
+            <img src="search.png" alt="Поиск">
+          </span>
+          <input type="text" placeholder="Введите название предмета, например: аккумулятор, пластиковая бутылка..."
+            class="search-bar__input">
+          <button class="btn btn--primary">Найти</button>
+        </div>
+
+        <!-- Быстрый выбор маркировки -->
+        <div class="tags-section">
+          <span class="tags-section__label">Или выберите код маркировки для быстрой справки:</span>
+          <div class="tags-grid">
+            <button class="tag"><b>01 PET</b> <span>ПЛАСТИК</span></button>
+            <button class="tag"><b>02 HDPE</b> <span>ПЛАСТИК</span></button>
+            <button class="tag"><b>03 PVC</b> <span>ПЛАСТИК</span></button>
+            <button class="tag"><b>04 LDPE</b> <span>ПЛАСТИК</span></button>
+            <button class="tag"><b>05 PP</b> <span>ПЛАСТИК</span></button>
+            <button class="tag"><b>06 PS</b> <span>ПЛАСТИК</span></button>
+            <button class="tag"><b>07 Other</b> <span>ДРУГОЕ</span></button>
+            <button class="tag"><b>PAP 20</b> <span>БУМАГА</span></button>
+            <button class="tag"><b>GL 70</b> <span>СТЕКЛО</span></button>
+            <button class="tag tag--center"><b>FE 40</b> <span>МЕТАЛЛ</span></button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ПОПУЛЯРНЫЕ ЗАПРОСЫ (Сетка карточек) -->
+    <section class="popular">
+      <div class="container">
+        <div class="section-header">
+          <h2 class="section-title">Популярные запросы</h2>
+          <a href="#" class="link-more">Все категории &rarr;</a>
+        </div>
+
+        <div class="cards-grid">
+          <!-- Карточка 1 -->
+          <div class="card">
+            <div class="card__icon">
+              <img src="battery_logo.png" alt="Батарейки">
+            </div>
+            <h3 class="card__title">Батарейки</h3>
+            <span class="card__count">340 пунктов приема</span>
+          </div>
+          <!-- Карточка 2 -->
+          <div class="card">
+            <div class="card__icon">
+              <img src="electric.png" alt="Электроника">
+            </div>
+            <h3 class="card__title">Электроника</h3>
+            <span class="card__count">128 пунктов приема</span>
+          </div>
+          <!-- Карточка 3 -->
+          <div class="card">
+            <div class="card__icon">
+              <img src="plastic.png" alt="Пластик">
+            </div>
+            <h3 class="card__title">Пластик</h3>
+            <span class="card__count">512 пунктов приема</span>
+          </div>
+          <!-- Карточка 4 -->
+          <div class="card">
+            <div class="card__icon">
+              <img src="glass.png" alt="Стекло">
+            </div>
+            <h3 class="card__title">Стекло</h3>
+            <span class="card__count">256 пунктов приема</span>
+          </div>
+          <!-- Карточка 5 -->
+          <div class="card">
+            <div class="card__icon">
+              <img src="fabric.png" alt="Текстиль">
+            </div>
+            <h3 class="card__title">Текстиль</h3>
+            <span class="card__count">94 пунктов приема</span>
+          </div>
+          <!-- Карточка 6 -->
+          <div class="card">
+            <div class="card__icon">
+              <img src="chemistry.png" alt="Бытовая химия">
+            </div>
+            <h3 class="card__title">Бытовая химия</h3>
+            <span class="card__count">115 пунктов приема</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ДВУХКОЛОНОЧНЫЙ МАКЕТ (Пример карточки отхода + пункты / Карта) -->
+    <section class="content-layout container">
+      <div class="main-content">
+        <div class="info-card">
+          <div class="info-card__header">
+            <h2>Название отхода</h2>
+            <div class="badges">
+              <span class="badge badge--success">✔ перерабатывается</span>
+              <span class="badge badge--warning">Опасный отход, класс II</span>
+            </div>
+          </div>
+          <p class="info-card__desc">Краткое описание</p>
+        </div>
+
+        <div class="info-card">
+          <h3>Как подготовить к сдаче</h3>
+          <ul class="steps-list">
+            <li><span class="step-num">1</span> 1 пункт</li>
+            <li><span class="step-num">2</span> 2 пункт</li>
+            <li><span class="step-num">3</span> 3 пункт</li>
+            <li><span class="step-num">4</span> 4 пункт</li>
+          </ul>
+        </div>
+
+        <div class="info-card">
+          <h3>Что происходит при переработке?</h3>
+          <p class="info-card__desc">Краткое описание</p>
+        </div>
+      </div>
+
+      <!-- Боковая панель с пунктами приема -->
+      <aside class="sidebar">
+        <div class="map-preview">
+          <div class="map-preview__placeholder">[ Карта ]</div>
+          <div class="map-preview__info">
+            <p>Найдены 3 пункта приема поблизости</p>
+            <button class="btn btn--outline">Показать все на карте</button>
+          </div>
+        </div>
+
+        <div class="points-list">
+          <h4>Ближайшие пункты</h4>
+
+          <div class="point-card">
+            <div class="point-card__header">
+              <h5>Пункт сбора ЭкоПатруль</h5>
+              <span class="point-card__dist">1.2 км</span>
+            </div>
+            <p class="point-card__address">ул. Ленина, д. 45</p>
+            <div class="point-card__tags">
+              <span class="mini-tag">Опасные отходы</span>
+              <span class="mini-tag">Батарейки</span>
+            </div>
+            <div class="point-card__footer">
+              <span>09:00 - 21:00</span>
+              <span>+7 (495) 123-45-67</span>
+            </div>
+          </div>
+
+          <div class="point-card">
+            <div class="point-card__header">
+              <h5>ВторТехЭко</h5>
+              <span class="point-card__dist">2.4 км</span>
+            </div>
+            <p class="point-card__address">Проспект Мира, д. 120, стр. 2</p>
+            <div class="point-card__tags">
+              <span class="mini-tag">Опасные отходы</span>
+              <span class="mini-tag">Металл</span>
+            </div>
+            <div class="point-card__footer">
+              <span>Круглосуточно</span>
+              <span>+7 (495) 987-65-43</span>
+            </div>
+          </div>
+        </div>
+      </aside>
+    </section>
+  </main>
+
+  <!-- ПОДВАЛ / FOOTER -->
+  <footer class="footer">
+    <div class="container footer__container">
+      <div class="footer__brand">
+        <h3>ЭкоГомель</h3>
+        <p>Удобный и понятный гид по раздельному сбору мусора и утилизации сложных отходов в вашем городе. Помогаем
+          делать мир чище, шаг за шагом.</p>
+      </div>
+      <div class="footer__bottom">
+        <span>© 2026 ЭкоГомель. Все права защищены.</span>
+        <span>Данные актуальны на сентябрь 2026</span>
+      </div>
+    </div>
+  </footer>
+  <script src="theme.js"></script>
+</body>
+
+</html>
