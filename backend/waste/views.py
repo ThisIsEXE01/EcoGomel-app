@@ -22,7 +22,7 @@ def waste_to_dict(item):
 def waste_list(request):
     """
     GET /api/waste/
-    GET /api/waste/?search=пластик&category=Пластик&recyclable=true
+    GET /api/waste/?search=PET&code=01&category=Пластик&recyclable=true
 
     Получение списка отходов с поиском и фильтрацией.
     """
@@ -31,21 +31,27 @@ def waste_list(request):
 
     queryset = WasteItem.objects.all()
 
-    # Поиск по названию, категории или ключевым словам
+    # 1. Общий поиск (по названию, категории, ключевым словам И коду)
     search_query = request.GET.get("search", "").strip()
     if search_query:
         queryset = queryset.filter(
             Q(name__icontains=search_query) |
             Q(category__icontains=search_query) |
-            Q(keywords__icontains=search_query)
+            Q(keywords__icontains=search_query) |
+            Q(code__icontains=search_query)
         )
 
-    # Фильтрация по категории
+    # 2. Фильтрация по конкретному коду (например, ?code=01 или ?code=PET)
+    code_query = request.GET.get("code", "").strip()
+    if code_query:
+        queryset = queryset.filter(code__icontains=code_query)
+
+    # 3. Фильтрация по категории
     category = request.GET.get("category", "").strip()
     if category:
         queryset = queryset.filter(category__iexact=category)
 
-    # Фильтрация по перерабатываемости (true / false)
+    # 4. Фильтрация по перерабатываемости (true / false)
     recyclable = request.GET.get("recyclable", "").strip()
     if recyclable.lower() in ["true", "1"]:
         queryset = queryset.filter(recyclable=True)
