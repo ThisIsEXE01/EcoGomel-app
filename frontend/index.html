@@ -6,6 +6,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ЭкоГомель</title>
   <link rel="stylesheet" href="style.css">
+  
+  <!-- Подключение стилей Leaflet для мини-карты -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 </head>
 
 <body>
@@ -163,10 +166,12 @@
       <!-- Боковая панель с пунктами приема -->
       <aside class="sidebar">
         <div class="map-preview">
-          <div class="map-preview__placeholder">[ Карта ]</div>
+          <!-- БЛОК МИНИ-КАРТЫ (вставлен вместо плейсхолдера) -->
+          <div id="miniMap" style="height: 180px; width: 100%; border-bottom: 1px solid var(--border-color); z-index: 1;"></div>
+          
           <div class="map-preview__info">
             <p>Найдены 3 пункта приема поблизости</p>
-            <button class="btn btn--outline">Показать все на карте</button>
+            <a href="map.html" class="btn btn--outline" style="display: block; text-align: center; text-decoration: none;">Показать все на карте</a>
           </div>
         </div>
 
@@ -223,6 +228,53 @@
       </div>
     </div>
   </footer>
+
+  <!-- Подключение скриптов Leaflet для карты -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  
+  <!-- Скрипт инициализации мини-карты -->
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const mapContainer = document.getElementById('miniMap');
+      if (mapContainer) {
+        // Инициализация карты (центр - Гомель)
+        const map = L.map('miniMap', {
+          zoomControl: false,
+          scrollWheelZoom: false,
+          dragging: true
+        }).setView([52.4345, 30.9754], 11);
+
+        // Загрузка тайлов (светлая тема OpenStreetMap)
+        L.tileLayer('https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', {
+          maxZoom: 19,
+          attribution: '&copy; OpenStreetMap'
+        }).addTo(map);
+
+        // Кастомная зеленая точка
+        const greenIcon = L.divIcon({
+          className: '',
+          html: '<div style="width: 14px; height: 14px; background-color: #25d366; border: 2px solid #fff; border-radius: 50%; box-shadow: 0 0 5px rgba(37,211,102,0.8);"></div>',
+          iconSize: [14, 14],
+          iconAnchor: [7, 7]
+        });
+
+        // 3 точки для примера (как написано в тексте)
+        const points = [
+          { name: "Гомель ВТИ", lat: 52.4172, lng: 30.9168 },
+          { name: "Гомелькоопвторресурсы", lat: 52.4503, lng: 31.0181 },
+          { name: "Спецкоммунтранс", lat: 52.4828, lng: 30.9997 }
+        ];
+
+        // Добавление маркеров на карту
+        points.forEach(p => {
+          L.marker([p.lat, p.lng], { icon: greenIcon })
+            .addTo(map)
+            .bindPopup(`<b>${p.name}</b>`);
+        });
+      }
+    });
+  </script>
+
   <script src="theme.js"></script>
 </body>
 
