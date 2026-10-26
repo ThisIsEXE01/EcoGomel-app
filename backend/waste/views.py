@@ -99,7 +99,7 @@ def point_to_dict(point):
         "address": point.address,
         "latitude": float(point.latitude),
         "longitude": float(point.longitude),
-        "work_hours": point.work_hours,
+        "working_hours": point.working_hours,
         "description": point.description,
         "accepted_types": accepted_types,
     }

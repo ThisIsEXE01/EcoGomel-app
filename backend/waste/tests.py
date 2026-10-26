@@ -57,11 +57,11 @@ class PointsApiTests(TestCase):
         self.assertEqual(point["id"], self.point.id)
         self.assertEqual(point["name"], "Пункт на Барыкина")
         self.assertEqual(point["address"], "г. Гомель, ул. Барыкина, 299")
-        self.assertEqual(point["work_hours"], "Пн-Пт 08:00-20:00")
+        self.assertEqual(point["working_hours"], "Пн-Пт 08:00-20:00")
         self.assertEqual(
             set(point),
             {"id", "name", "address", "latitude", "longitude",
-             "work_hours", "description", "accepted_types"},
+             "working_hours", "description", "accepted_types"},
         )
         self.assertEqual(point["description"], "Тестовый пункт")
 
