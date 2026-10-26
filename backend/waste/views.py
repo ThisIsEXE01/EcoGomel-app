@@ -1,6 +1,6 @@
 from django.http import JsonResponse
 from django.db.models import Q
-from .models import WasteItem
+from .models import DropoffPoint, WasteItem
 
 
 def waste_to_dict(item):
@@ -77,3 +77,58 @@ def waste_detail(request, pk):
         return JsonResponse({"error": "Waste item not found"}, status=404)
 
     return JsonResponse(waste_to_dict(item), json_dumps_params={'ensure_ascii': False})
+
+
+def point_to_dict(point):
+    """Превращает пункт приёма в формат JSON для карты Leaflet.
+
+    Координаты отдаются числами (float), а не строками, чтобы их можно
+    было сразу передать в L.marker([latitude, longitude]).
+    accepted_types — уникальные категории принимаемых отходов
+    (map_filter_category, а если она пустая — category); они совпадают
+    со значениями фильтров на странице карты.
+    """
+    accepted_types = sorted({
+        waste.map_filter_category or waste.category
+        for waste in point.accepted_types.all()
+    })
+
+    return {
+        "id": point.id,
+        "name": point.name,
+        "address": point.address,
+        "latitude": float(point.latitude),
+        "longitude": float(point.longitude),
+        "working_hours": point.working_hours,
+        "description": point.description,
+        "accepted_types": accepted_types,
+    }
+
+
+def points_list(request):
+    """
+    GET /api/points/
+    GET /api/points/?waste_id=1
+
+    Список пунктов приёма для карты. Параметр waste_id оставляет только
+    пункты, которые принимают отход с этим id (нечисловое значение -> 400).
+    """
+    if request.method != "GET":
+        return JsonResponse({"error": "Method not allowed"}, status=405)
+
+    queryset = DropoffPoint.objects.prefetch_related("accepted_types").order_by("id")
+
+    waste_id = request.GET.get("waste_id", "").strip()
+    if waste_id:
+        try:
+            waste_id = int(waste_id)
+        except ValueError:
+            return JsonResponse(
+                {"error": "waste_id должен быть целым числом"},
+                status=400,
+                json_dumps_params={'ensure_ascii': False},
+            )
+        queryset = queryset.filter(accepted_types__id=waste_id)
+
+    data = [point_to_dict(point) for point in queryset]
+    return JsonResponse(data, safe=False, json_dumps_params={'ensure_ascii': False})
