@@ -1,0 +1,6 @@
+bug№1 Theme flickering during page reload
+(When switching from dark mode to light mode, the transition between websites is not smooth: the dark theme appears for half a second before the light theme takes over. Jira scrum 52)
+bug№2 Error regarding map points and input windows
+(The map needs to be set up differently: when a waste type is selected, only the locations containing that type of waste should be highlighted. Also, the input windows on the map need to be changed—basically, just look at the screenshots to see what I mean. Jira scrum 53)
+bug№3 Map in mobile device mode
+(The map looks disproportionate in the mobile version; a screenshot is attached. Jira srum 58)
