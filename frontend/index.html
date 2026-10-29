@@ -1,16 +1,13 @@
 <!DOCTYPE html>
 <html lang="ru">
-
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ЭкоГомель</title>
+  <title>ЭкоГомель — Поиск и гид по утилизации</title>
   <link rel="stylesheet" href="style.css">
-  
-  <!-- Подключение стилей Leaflet для мини-карты -->
+  <!-- Leaflet CSS для миникарты -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 </head>
-
 <body>
 
   <!-- ШАПКА / NAVIGATION -->
@@ -27,7 +24,7 @@
         <a href="map.html" class="nav__link">Карта</a>
         <a href="about_project.html" class="nav__link">О проекте</a>
         <button id="theme-toggle" class="theme-toggle" aria-label="Переключить тему">
-          <img src="moon.png" alt="Луна">
+          <img src="moon.svg" alt="Луна">
         </button>
       </nav>
     </div>
@@ -39,34 +36,65 @@
       <div class="container hero__container">
         <h1 class="hero__title">Узнайте, как правильно утилизировать любой предмет</h1>
         <p class="hero__subtitle">
-          Интерактивный гид по маркировкам переработки и пунктам приема вторсырья в вашем городе.
+          Интерактивный гид по маркировкам переработки и пунктам приема вторсырья в вашем городе. 
           Сделайте раздельный сбор частью своей повседневной жизни.
         </p>
 
-        <!-- Поисковая строка -->
-        <div class="search-bar">
+        <!-- Поисковая строка с автокомплитом -->
+        <div class="search-bar" style="position: relative;">
           <span class="search-bar__icon">
-            <img src="search.png" alt="Поиск">
+            <img src="search.svg" alt="Поиск">
           </span>
-          <input type="text" placeholder="Введите название предмета, например: аккумулятор, пластиковая бутылка..."
-            class="search-bar__input">
-          <button class="btn btn--primary">Найти</button>
+          <input type="text" id="mainSearchInput" placeholder="Введите название предмета, например: аккумулятор, пластиковая бутылка..." class="search-bar__input" autocomplete="off">
+          <button id="mainSearchBtn" class="btn btn--primary">Найти</button>
+          
+          <!-- Выпадающий список автокомплита -->
+          <div id="autocompleteDropdown" class="autocomplete-dropdown" style="display: none; position: absolute; top: 100%; left: 0; right: 0; background: var(--bg-card, #fff); border: 1px solid var(--border-color, #ddd); border-radius: 0 0 8px 8px; z-index: 1000; max-height: 250px; overflow-y: auto; box-shadow: 0 4px 12px rgba(0,0,0,0.1);"></div>
         </div>
 
         <!-- Быстрый выбор маркировки -->
         <div class="tags-section">
           <span class="tags-section__label">Или выберите код маркировки для быстрой справки:</span>
-          <div class="tags-grid">
-            <button class="tag"><b>01 PET</b> <span>ПЛАСТИК</span></button>
-            <button class="tag"><b>02 HDPE</b> <span>ПЛАСТИК</span></button>
-            <button class="tag"><b>03 PVC</b> <span>ПЛАСТИК</span></button>
-            <button class="tag"><b>04 LDPE</b> <span>ПЛАСТИК</span></button>
-            <button class="tag"><b>05 PP</b> <span>ПЛАСТИК</span></button>
-            <button class="tag"><b>06 PS</b> <span>ПЛАСТИК</span></button>
-            <button class="tag"><b>07 Other</b> <span>ДРУГОЕ</span></button>
-            <button class="tag"><b>PAP 20</b> <span>БУМАГА</span></button>
-            <button class="tag"><b>GL 70</b> <span>СТЕКЛО</span></button>
-            <button class="tag tag--center"><b>FE 40</b> <span>МЕТАЛЛ</span></button>
+          <div class="tags-grid" id="tagsContainer">
+
+          <button class="tag" data-tag="PET">
+            <img src="plastic_01.svg" alt="01 PET" class="cards__icon"><span>ПЛАСТИК</span>
+          </button>
+
+          <button class="tag" data-tag="HDPE">
+            <img src="plastic_02.svg" alt="02 HDPE" class="cards__icon"><span>ПЛАСТИК</span>
+          </button>
+
+            <button class="tag" data-tag="PVC">
+            <img src="plastic_03.svg" alt="03 PVC" class="cards__icon"><span>ПЛАСТИК</span>
+          </button>
+
+            <button class="tag" data-tag="LDPE">
+              <img src="plastic_04.svg" alt="04 LDPE" class="cards__icon"><span>ПЛАСТИК</span>
+            </button>
+            <button class="tag" data-tag="PP">
+              <img src="plastic_05.svg" alt="05 PP" class="cards__icon"><span>ПЛАСТИК</span>
+            </button>
+
+            <button class="tag" data-tag="PS">
+              <img src="plastic_06.svg" alt="06 PS" class="cards__icon"><span>ПЛАСТИК</span>
+            </button>
+
+            <button class="tag" data-tag="Other">
+              <img src="plastic_07.svg" alt="07 Other" class="cards__icon"><span>ДРУГОЕ</span>
+            </button>
+
+            <button class="tag" data-tag="PAP">
+              <img src="paper_20.svg" alt="20 PAP" class="cards__icon"><span>БУМАГА</span>
+            </button>
+
+            <button class="tag" data-tag="GL">
+              <img src="glass_70.svg" alt="70 GL" class="cards__icon"><span>СТЕКЛО</span>
+            </button>
+
+            <button class="tag tag--center" data-tag="FE">
+              <img src="metall_40.svg" alt="40 FE" class="cards__icon"><span>МЕТАЛЛ</span>
+            </button>
           </div>
         </div>
       </div>
@@ -76,138 +104,73 @@
     <section class="popular">
       <div class="container">
         <div class="section-header">
-          <h2 class="section-title">Популярные запросы</h2>
-          <a href="#" class="link-more">Все категории &rarr;</a>
+          <h2 class="section-title">Популярные категории</h2>
+          <a href="map.html" class="link-more">Все пункты на карте &rarr;</a>
         </div>
 
-        <div class="cards-grid">
-          <!-- Карточка 1 -->
-          <div class="card">
-            <div class="card__icon">
-              <img src="battery_logo.png" alt="Батарейки">
-            </div>
+        <div class="cards-grid" id="categoriesGrid">
+          <div class="card" data-category="Батарейки">
+            <div class="card__icon"><img src="battery.svg" alt="Батарейки"></div>
             <h3 class="card__title">Батарейки</h3>
-            <span class="card__count">340 пунктов приема</span>
+            <span class="card__count" id="count-Батарейки">Загрузка...</span>
           </div>
-          <!-- Карточка 2 -->
-          <div class="card">
-            <div class="card__icon">
-              <img src="electric.png" alt="Электроника">
-            </div>
+          <div class="card" data-category="Электроника">
+            <div class="card__icon"><img src="electric.svg" alt="Электроника"></div>
             <h3 class="card__title">Электроника</h3>
-            <span class="card__count">128 пунктов приема</span>
+            <span class="card__count" id="count-Электроника">Загрузка...</span>
           </div>
-          <!-- Карточка 3 -->
-          <div class="card">
-            <div class="card__icon">
-              <img src="plastic.png" alt="Пластик">
-            </div>
+          <div class="card" data-category="Пластик">
+            <div class="card__icon"><img src="plastic.svg" alt="Пластик"></div>
             <h3 class="card__title">Пластик</h3>
-            <span class="card__count">512 пунктов приема</span>
+            <span class="card__count" id="count-Пластик">Загрузка...</span>
           </div>
-          <!-- Карточка 4 -->
-          <div class="card">
-            <div class="card__icon">
-              <img src="glass.png" alt="Стекло">
-            </div>
+          <div class="card" data-category="Стекло">
+            <div class="card__icon"><img src="glass.svg" alt="Стекло"></div>
             <h3 class="card__title">Стекло</h3>
-            <span class="card__count">256 пунктов приема</span>
+            <span class="card__count" id="count-Стекло">Загрузка...</span>
           </div>
-          <!-- Карточка 5 -->
-          <div class="card">
-            <div class="card__icon">
-              <img src="fabric.png" alt="Текстиль">
-            </div>
-            <h3 class="card__title">Текстиль</h3>
-            <span class="card__count">94 пунктов приема</span>
+          <div class="card" data-category="Макулатура">
+            <div class="card__icon"><img src="paper.svg" alt="Макулатура"></div>
+            <h3 class="card__title">Макулатура</h3>
+            <span class="card__count" id="count-Макулатура">Загрузка...</span>
           </div>
-          <!-- Карточка 6 -->
-          <div class="card">
-            <div class="card__icon">
-              <img src="chemistry.png" alt="Бытовая химия">
-            </div>
-            <h3 class="card__title">Бытовая химия</h3>
-            <span class="card__count">115 пунктов приема</span>
+          <div class="card" data-category="Металлолом">
+            <div class="card__icon"><img src="iron.svg" alt="Металлолом"></div>
+            <h3 class="card__title">Металлолом</h3>
+            <span class="card__count" id="count-Металлолом">Загрузка...</span>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- ДВУХКОЛОНОЧНЫЙ МАКЕТ (Пример карточки отхода + пункты / Карта) -->
-    <section class="content-layout container">
+    <!-- ДВУХКОЛОНОЧНЫЙ МАКЕТ (пункты приема и миникарта) -->
+    <section class="content-layout container" id="detailsSection">
       <div class="main-content">
         <div class="info-card">
           <div class="info-card__header">
-            <h2>Название отхода</h2>
-            <div class="badges">
-              <span class="badge badge--success">✔ перерабатывается</span>
-              <span class="badge badge--warning">Опасный отход, класс II</span>
-            </div>
+            <h2>Карта города и сбор вторсырья</h2>
           </div>
-          <p class="info-card__desc">Краткое описание</p>
-        </div>
-
-        <div class="info-card">
-          <h3>Как подготовить к сдаче</h3>
-          <ul class="steps-list">
-            <li><span class="step-num">1</span> 1 пункт</li>
-            <li><span class="step-num">2</span> 2 пункт</li>
-            <li><span class="step-num">3</span> 3 пункт</li>
-            <li><span class="step-num">4</span> 4 пункт</li>
-          </ul>
-        </div>
-
-        <div class="info-card">
-          <h3>Что происходит при переработке?</h3>
-          <p class="info-card__desc">Краткое описание</p>
+          <p class="info-card__desc">
+            На этой странице вы можете быстро найти нужный тип отходов, используя поиск выше, либо ознакомиться с пунктами приема на карте города.
+          </p>
         </div>
       </div>
 
-      <!-- Боковая панель с пунктами приема -->
+      <!-- Боковая панель с пунктами приема и миникартой -->
       <aside class="sidebar">
         <div class="map-preview">
-          <!-- БЛОК МИНИ-КАРТЫ (вставлен вместо плейсхолдера) -->
-          <div id="miniMap" style="height: 180px; width: 100%; border-bottom: 1px solid var(--border-color); z-index: 1;"></div>
-          
+          <!-- Интерактивная миникарта Leaflet -->
+          <div id="miniMap" style="width: 100%; height: 180px; border-radius: 8px 8px 0 0;"></div>
           <div class="map-preview__info">
-            <p>Найдены 3 пункта приема поблизости</p>
-            <a href="map.html" class="btn btn--outline" style="display: block; text-align: center; text-decoration: none;">Показать все на карте</a>
+            <p id="mapPreviewCount">Загрузка данных...</p>
+            <button class="btn btn--outline" onclick="window.location.href='map.html'">Показать все на карте</button>
           </div>
         </div>
 
         <div class="points-list">
-          <h4>Ближайшие пункты</h4>
-
-          <div class="point-card">
-            <div class="point-card__header">
-              <h5>Пункт сбора ЭкоПатруль</h5>
-              <span class="point-card__dist">1.2 км</span>
-            </div>
-            <p class="point-card__address">ул. Ленина, д. 45</p>
-            <div class="point-card__tags">
-              <span class="mini-tag">Опасные отходы</span>
-              <span class="mini-tag">Батарейки</span>
-            </div>
-            <div class="point-card__footer">
-              <span>09:00 - 21:00</span>
-              <span>+7 (495) 123-45-67</span>
-            </div>
-          </div>
-
-          <div class="point-card">
-            <div class="point-card__header">
-              <h5>ВторТехЭко</h5>
-              <span class="point-card__dist">2.4 км</span>
-            </div>
-            <p class="point-card__address">Проспект Мира, д. 120, стр. 2</p>
-            <div class="point-card__tags">
-              <span class="mini-tag">Опасные отходы</span>
-              <span class="mini-tag">Металл</span>
-            </div>
-            <div class="point-card__footer">
-              <span>Круглосуточно</span>
-              <span>+7 (495) 987-65-43</span>
-            </div>
+          <h4 id="pointsListTitle">Ближайшие пункты</h4>
+          <div id="sidePointsContainer">
+            <!-- Динамически заполняется -->
           </div>
         </div>
       </aside>
@@ -219,63 +182,264 @@
     <div class="container footer__container">
       <div class="footer__brand">
         <h3>ЭкоГомель</h3>
-        <p>Удобный и понятный гид по раздельному сбору мусора и утилизации сложных отходов в вашем городе. Помогаем
-          делать мир чище, шаг за шагом.</p>
+        <p>Удобный и понятный гид по раздельному сбору мусора и утилизации сложных отходов в вашем городе. Помогаем делать мир чище, шаг за шагом.</p>
       </div>
       <div class="footer__bottom">
         <span>© 2026 ЭкоГомель. Все права защищены.</span>
-        <span>Данные актуальны на сентябрь 2026</span>
+        <span>Данные актуальны на 2026 год</span>
       </div>
     </div>
   </footer>
 
-  <!-- Подключение скриптов Leaflet для карты -->
+  <!-- Скрипт Leaflet для миникарты -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  
-  <!-- Скрипт инициализации мини-карты -->
+  <script src="theme.js"></script>
+
+  <!-- ИНТЕГРАЦИЯ С DJANGO REST API И МИНИКАРТОЙ -->
   <script>
-    document.addEventListener('DOMContentLoaded', () => {
+    // Базовый конфиг API
+    const API_BASE_URL = 'http://127.0.0.1:8000';
+    const API_WASTE_URL = `${API_BASE_URL}/api/waste/`;
+    const API_POINTS_URL = `${API_BASE_URL}/api/v1/points/`;
+
+    let allPoints = [];
+    let miniMap = null;
+    let markersLayer = null;
+
+    // Маппинг категорий для корректных запросов к БД
+    // Обновленная функция формирования параметров
+function getCategoryQueryParam(categoryName) {
+  // Для специфических категорий ищем по map_filter_category
+  if (categoryName === 'Батарейки') {
+    return 'map_filter_category=Батарейки';
+  }
+  if (categoryName === 'Металлолом') {
+    return 'category=Металлолом';
+  }
+  // Для остальных категорий используем стандартное поле category
+  return `category=${encodeURIComponent(categoryName)}`;
+}
+
+    // Инициализация миникарты Leaflet
+    function initMiniMap() {
       const mapContainer = document.getElementById('miniMap');
-      if (mapContainer) {
-        // Инициализация карты (центр - Гомель)
-        const map = L.map('miniMap', {
-          zoomControl: false,
-          scrollWheelZoom: false,
-          dragging: true
-        }).setView([52.4345, 30.9754], 11);
+      if (!mapContainer || miniMap) return;
 
-        // Загрузка тайлов (светлая тема OpenStreetMap)
-        L.tileLayer('https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', {
-          maxZoom: 19,
-          attribution: '&copy; OpenStreetMap'
-        }).addTo(map);
+      miniMap = L.map(mapContainer, {
+        zoomControl: false,
+        attributionControl: false
+      }).setView([52.4345, 30.9754], 12);
 
-        // Кастомная зеленая точка
-        const greenIcon = L.divIcon({
-          className: '',
-          html: '<div style="width: 14px; height: 14px; background-color: #25d366; border: 2px solid #fff; border-radius: 50%; box-shadow: 0 0 5px rgba(37,211,102,0.8);"></div>',
-          iconSize: [14, 14],
-          iconAnchor: [7, 7]
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19
+      }).addTo(miniMap);
+
+      markersLayer = L.layerGroup().addTo(miniMap);
+    }
+
+    // Обновление маркеров на миникарте
+    function updateMiniMapMarkers(pointsToRender) {
+      if (!miniMap || !markersLayer) return;
+      markersLayer.clearLayers();
+
+      pointsToRender.forEach(p => {
+        if (p.latitude && p.longitude) {
+          const marker = L.marker([p.latitude, p.longitude]);
+          marker.bindPopup(`<b>${p.name}</b><br>${p.address}`);
+          markersLayer.addLayer(marker);
+        }
+      });
+    }
+
+    // 1. Загрузка данных по отходам (GET /api/waste/)
+    async function fetchWasteData(param = '') {
+      try {
+        const url = param ? `${API_WASTE_URL}?${param}` : API_WASTE_URL;
+        const response = await fetch(url);
+        if (!response.ok) throw new Error('Ошибка сервера отходов');
+        const data = await response.json();
+        return Array.isArray(data) ? data : (data.results || []);
+      } catch (err) {
+        console.warn('Не удалось загрузить данные об отходах:', err);
+        return [];
+      }
+    }
+
+    // 2. Загрузка пунктов приёма
+    async function fetchPointsData() {
+      try {
+        const response = await fetch(API_POINTS_URL);
+        if (response.ok) {
+          const data = await response.json();
+          allPoints = Array.isArray(data) ? data : (data.results || []);
+        }
+      } catch (err) {
+        console.warn('Не удалось загрузить пункты приёма с сервера:', err);
+        const saved = localStorage.getItem('ecogomel_points');
+        allPoints = saved ? JSON.parse(saved) : [];
+      }
+      initMiniMap();
+      updateMiniMapMarkers(allPoints);
+      updateCategoryCounts();
+      renderSidebarPoints(allPoints);
+    }
+
+    // 3. Обновление счетчиков в карточках категорий
+    async function updateCategoryCounts() {
+      const categories = ['Батарейки', 'Электроника', 'Пластик', 'Стекло', 'Макулатура', 'Металлолом'];
+      
+      for (const cat of categories) {
+        const paramStr = getCategoryQueryParam(cat);
+        const wasteItems = await fetchWasteData(paramStr);
+        const el = document.getElementById(`count-${cat}`);
+        if (el) {
+          el.textContent = `${wasteItems.length} видов отходов`;
+        }
+      }
+
+      const mapCountEl = document.getElementById('mapPreviewCount');
+      if (mapCountEl) {
+        mapCountEl.textContent = `Найдено ${allPoints.length} пунктов в городе`;
+      }
+    }
+
+    // 4. Отрисовка пунктов приема в сайдбаре
+    function renderSidebarPoints(pointsToRender) {
+      const container = document.getElementById('sidePointsContainer');
+      if (!container) return;
+
+      container.innerHTML = '';
+
+      if (!pointsToRender || pointsToRender.length === 0) {
+        container.innerHTML = '<p style="color:var(--text-muted); font-size:0.85rem; padding:10px;">Пункты не найдены</p>';
+        return;
+      }
+
+      pointsToRender.slice(0, 5).forEach(p => {
+        const card = document.createElement('div');
+        card.className = 'point-card';
+        card.style.cursor = 'pointer';
+
+        const tags = (p.accepted_types || [])
+          .slice(0, 3)
+          .map(t => `<span class="mini-tag">${t}</span>`)
+          .join('');
+
+        card.innerHTML = `
+          <div class="point-card__header">
+            <h5>${p.name}</h5>
+          </div>
+          <p class="point-card__address">${p.address}</p>
+          <div class="point-card__tags">${tags}</div>
+          <div class="point-card__footer">
+            <span>${p.working_hours || 'График не указан'}</span>
+          </div>
+        `;
+
+        card.addEventListener('click', () => {
+          window.location.href = `map.html?id=${p.id}`;
         });
 
-        // 3 точки для примера (как написано в тексте)
-        const points = [
-          { name: "Гомель ВТИ", lat: 52.4172, lng: 30.9168 },
-          { name: "Гомелькоопвторресурсы", lat: 52.4503, lng: 31.0181 },
-          { name: "Спецкоммунтранс", lat: 52.4828, lng: 30.9997 }
-        ];
+        container.appendChild(card);
+      });
+    }
 
-        // Добавление маркеров на карту
-        points.forEach(p => {
-          L.marker([p.lat, p.lng], { icon: greenIcon })
-            .addTo(map)
-            .bindPopup(`<b>${p.name}</b>`);
+    // Функция перехода на страницу результатов поиска
+    function executeSearch(query) {
+      const trimmed = query.trim();
+      if (!trimmed) return;
+      window.location.href = `search_results.html?query=${encodeURIComponent(trimmed)}`;
+    }
+
+    // Логика автокомплита
+    async function setupAutocomplete() {
+      const input = document.getElementById('mainSearchInput');
+      const dropdown = document.getElementById('autocompleteDropdown');
+      if (!input || !dropdown) return;
+
+      let debounceTimer;
+
+      input.addEventListener('input', async (e) => {
+        const query = e.target.value.trim();
+        clearTimeout(debounceTimer);
+
+        if (query.length < 2) {
+          dropdown.style.display = 'none';
+          dropdown.innerHTML = '';
+          return;
+        }
+
+        debounceTimer = setTimeout(async () => {
+          try {
+            const response = await fetch(`${API_WASTE_URL}?search=${encodeURIComponent(query)}`);
+            if (!response.ok) return;
+            const data = await response.json();
+            const items = Array.isArray(data) ? data : (data.results || []);
+
+            if (items.length === 0) {
+              dropdown.innerHTML = '<div style="padding: 10px; font-size: 0.9rem; color: var(--text-muted);">Ничего не найдено</div>';
+            } else {
+              dropdown.innerHTML = items.slice(0, 5).map(item => `
+                <div class="autocomplete-item" data-id="${item.id}" style="padding: 10px 15px; cursor: pointer; border-bottom: 1px solid var(--border-color, #eee); font-size: 0.9rem;">
+                  <b>${item.title || item.name}</b> 
+                  <span style="font-size: 0.8rem; color: var(--text-muted); float: right;">${item.category || ''}</span>
+                </div>
+              `).join('');
+
+              // Клик по элементу автокомплита открывает страницу конкретного отхода
+              dropdown.querySelectorAll('.autocomplete-item').forEach(el => {
+                el.addEventListener('click', () => {
+                  const itemId = el.dataset.id;
+                  window.location.href = `search_results.html?id=${itemId}`;
+                });
+              });
+            }
+            dropdown.style.display = 'block';
+          } catch (err) {
+            console.warn('Ошибка автокомплита:', err);
+          }
+        }, 300);
+      });
+
+      // Закрытие при клике вне поля
+      document.addEventListener('click', (e) => {
+        if (!input.contains(e.target) && !dropdown.contains(e.target)) {
+          dropdown.style.display = 'none';
+        }
+      });
+    }
+
+    // Инициализация при загрузке DOM
+    document.addEventListener('DOMContentLoaded', () => {
+      fetchPointsData();
+      setupAutocomplete();
+
+      const searchInput = document.getElementById('mainSearchInput');
+      const searchBtn = document.getElementById('mainSearchBtn');
+
+      if (searchBtn && searchInput) {
+        searchBtn.addEventListener('click', () => executeSearch(searchInput.value));
+        searchInput.addEventListener('keypress', (e) => {
+          if (e.key === 'Enter') executeSearch(searchInput.value);
         });
       }
+
+      // Обработка тегов
+      document.querySelectorAll('.tag').forEach(tagBtn => {
+        tagBtn.addEventListener('click', () => {
+          const tag = tagBtn.dataset.tag || tagBtn.innerText;
+          executeSearch(tag);
+        });
+      });
+
+      // Обработка клика по категориям
+      document.querySelectorAll('.card[data-category]').forEach(card => {
+        card.addEventListener('click', () => {
+          const cardCat = card.dataset.category;
+          executeSearch(cardCat);
+        });
+      });
     });
   </script>
-
-  <script src="theme.js"></script>
 </body>
-
 </html>

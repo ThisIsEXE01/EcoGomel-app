@@ -148,14 +148,6 @@
       background-color: var(--bg-card-hover);
       transform: scale(1.05);
     }
-    
-    .theme-toggle img {
-      width: 20px;
-      height: 20px;
-      object-fit: contain;
-      display: block;
-      pointer-events: none;
-    }
 
     /* ==================== 3. КАРТА ==================== */
     .main-layout {
@@ -415,66 +407,22 @@
     }
 
     /* ==================== 4. ТЁМНЫЙ ВИД ТАЙЛОВ ==================== */
+    /* Тайлы всегда светлые (openstreetmap.fr), но в тёмной теме их инвертируем */
     [data-theme="dark"] .leaflet-tile-pane {
       filter: invert(1) hue-rotate(180deg) brightness(0.95) contrast(0.9);
     }
 
-    /* ==================== 5. МОДАЛЬНОЕ ОКНО ==================== */
-    .modal-overlay {
-      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(0, 0, 0, 0.6);
-      display: none; justify-content: center; align-items: center;
-      z-index: 1000; backdrop-filter: blur(4px);
-    }
-    .modal-overlay.active { display: flex; }
-    .modal-window {
-      background: var(--bg-card);
-      border: 1px solid var(--border-color);
-      border-radius: var(--radius-md);
-      padding: 24px;
-      width: 100%;
-      max-width: 420px;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
-      animation: modalFadeIn 0.2s ease-out;
-    }
-    @keyframes modalFadeIn { from { transform: translateY(10px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-    .modal-title { font-size: 1.2rem; font-weight: 600; margin-bottom: 16px; color: var(--text-main); }
-    .form-group { margin-bottom: 12px; }
-    .form-group label { display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 4px; }
-    .form-group input { width: 100%; padding: 10px; background: var(--bg-input); border: 1px solid var(--border-color); border-radius: var(--radius-sm); color: var(--text-main); outline: none; font-family: inherit; }
-    .form-group input:focus { border-color: var(--accent-light); }
-    .modal-actions { display: flex; gap: 10px; margin-top: 20px; }
-    .modal-actions button { flex: 1; padding: 10px; border-radius: var(--radius-sm); font-weight: 600; cursor: pointer; border: none; transition: 0.2s; }
-    .btn-cancel { background: var(--bg-card-hover); color: var(--text-main); border: 1px solid var(--border-color); }
-    .btn-cancel:hover { background: var(--border-color); }
-    .btn-save { background: var(--accent-green); color: #fff; }
-    .btn-save:hover { background: var(--accent-green-hover); }
-
-    /* ==================== 6. МОБИЛЬНАЯ ВЕРСИЯ ==================== */
     @media (max-width: 800px) {
-      .main-layout {
-        flex-direction: column;
-        height: auto;
-        overflow-y: auto;
-      }
       #sidebar {
-        width: 100%;
-        height: 45vh;
-        border-right: none;
-        border-bottom: 1px solid var(--border-color);
+        width: 280px;
       }
-      #map {
-        height: 55vh;
-        width: 100%;
-      }
+
       .nav {
         gap: 12px;
       }
+
       .nav__link {
         font-size: 0.85rem;
-      }
-      .header__container {
-        height: 60px;
       }
     }
   </style>
@@ -490,9 +438,7 @@
         <a href="index.html" class="nav__link">Главная</a>
         <a href="map.html" class="nav__link active">Карта</a>
         <a href="about_project.html" class="nav__link">О проекте</a>
-        <button id="theme-toggle" class="theme-toggle" aria-label="Переключить тему">
-          <img src="moon.png" alt="Луна">
-        </button>
+        <button id="theme-toggle" class="theme-toggle" aria-label="Переключить тему">🌙</button>
       </nav>
     </div>
   </header>
@@ -515,8 +461,10 @@
       </div>
 
       <div class="actions">
-        <button id="addModeBtn">➕ Добавить точку</button>
-        <button id="clearAllBtn">🗑 Удалить все</button>
+        <button id="addModeBtn">
+          <img class="btn-icon" src="add_point.svg" alt="">Добавить точку</button>
+        <button id="clearAllBtn">
+          <img class="btn-icon" src="trashcan.svg" alt="">Удалить все</button>
       </div>
 
       <div id="points-list"></div>
@@ -525,60 +473,35 @@
     <div id="map"></div>
   </div>
 
-  <!-- МОДАЛЬНОЕ ОКНО ДОБАВЛЕНИЯ ТОЧКИ -->
-  <div class="modal-overlay" id="addModal">
-    <div class="modal-window">
-      <h3 class="modal-title">Новая точка на карте</h3>
-      <div class="form-group">
-        <label>Название точки</label>
-        <input type="text" id="m_name" placeholder="Например: ЭкоПункт у дома">
-      </div>
-      <div class="form-group">
-        <label>Адрес</label>
-        <input type="text" id="m_address" placeholder="ул. Ленина, д. 1">
-      </div>
-      <div class="form-group">
-        <label>Что принимают (через запятую)</label>
-        <input type="text" id="m_types" placeholder="Пластик, Стекло">
-      </div>
-      <div class="form-group">
-        <label>Часы работы</label>
-        <input type="text" id="m_hours" placeholder="Пн-Пт 09:00-18:00">
-      </div>
-      <div class="modal-actions">
-        <button class="btn-cancel" id="btnCancelModal">Отмена</button>
-        <button class="btn-save" id="btnSaveModal">Сохранить</button>
-      </div>
-    </div>
-  </div>
-
   <!-- Leaflet JS -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
-  <!-- ============ ПЕРЕКЛЮЧАТЕЛЬ ТЕМЫ ============ -->
+  <!-- ============ ПЕРЕКЛЮЧАТЕЛЬ ТЕМЫ (self-contained) ============ -->
   <script>
     (function () {
       const btn = document.getElementById('theme-toggle');
       const saved = localStorage.getItem('theme') || 'dark';
 
+      // Начальная тема
       if (saved === 'light') {
         document.documentElement.setAttribute('data-theme', 'light');
-        btn.innerHTML = '<img src="sun.png" alt="Светлая тема" style="width:20px; height:20px; pointer-events:none;">';
+        btn.textContent = '☀️';
       } else {
         document.documentElement.setAttribute('data-theme', 'dark');
-        btn.innerHTML = '<img src="moon.png" alt="Тёмная тема" style="width:20px; height:20px; pointer-events:none;">';
+        btn.textContent = '🌙';
       }
 
+      // Переключение
       btn.addEventListener('click', () => {
         const cur = document.documentElement.getAttribute('data-theme');
         if (cur === 'light') {
           document.documentElement.setAttribute('data-theme', 'dark');
           localStorage.setItem('theme', 'dark');
-          btn.innerHTML = '<img src="moon.png" alt="Тёмная тема" style="width:20px; height:20px; pointer-events:none;">';
+          btn.textContent = '🌙';
         } else {
           document.documentElement.setAttribute('data-theme', 'light');
           localStorage.setItem('theme', 'light');
-          btn.innerHTML = '<img src="sun.png" alt="Светлая тема" style="width:20px; height:20px; pointer-events:none;">';
+          btn.textContent = '☀️';
         }
       });
     })();
@@ -621,13 +544,8 @@
        ============================================================ */
     async function getPoints() {
       if (DATA_SOURCE === 'api') {
-        try {
-          const res = await fetch(API_URL);
-          return await res.json();
-        } catch (e) {
-          console.error('Ошибка API:', e);
-          return JSON.parse(JSON.stringify(INITIAL_POINTS));
-        }
+        const res = await fetch(API_URL);
+        return await res.json();
       }
       const saved = localStorage.getItem(LS_KEY);
       if (saved) return JSON.parse(saved);
@@ -642,16 +560,12 @@
 
     async function apiAddPoint(point) {
       if (DATA_SOURCE === 'api') {
-        try {
-          const res = await fetch(API_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(point)
-          });
-          return await res.json();
-        } catch (e) {
-          console.error('Ошибка API:', e);
-        }
+        const res = await fetch(API_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(point)
+        });
+        return await res.json();
       }
       point.id = Date.now();
       return point;
@@ -659,11 +573,7 @@
 
     async function apiDeletePoint(id) {
       if (DATA_SOURCE === 'api') {
-        try {
-          await fetch(`${API_URL}/${id}`, { method: 'DELETE' });
-        } catch (e) {
-          console.error('Ошибка API:', e);
-        }
+        await fetch(`${API_URL}/${id}`, { method: 'DELETE' });
       }
     }
 
@@ -675,10 +585,9 @@
     let activeFilter = 'all';
     let searchText = '';
     let addMode = false;
-    let tempLatLng = null;
 
     /* ============================================================
-       5. КАРТА
+       5. КАРТА (рабочий тайл-сервер)
        ============================================================ */
     const map = L.map('map', { zoomControl: false })
       .setView([52.4345, 30.9754], 12);
@@ -700,7 +609,7 @@
     });
 
     /* ============================================================
-       6. МАРКЕРЫ И ФИЛЬТРАЦИЯ
+       6. МАРКЕРЫ
        ============================================================ */
     function addMarker(p) {
       const marker = L.marker([p.latitude, p.longitude], { icon: greenIcon }).addTo(map);
@@ -724,26 +633,6 @@
           Удалить точку
         </button>
       </div>`;
-    }
-
-    function syncMarkers() {
-      points.forEach(p => {
-        const matchType = activeFilter === 'all' ||
-          (p.accepted_types || []).some(t => t.toLowerCase().includes(activeFilter.toLowerCase()));
-        
-        const matchText = searchText === '' ||
-          p.name.toLowerCase().includes(searchText) ||
-          p.address.toLowerCase().includes(searchText);
-
-        const marker = markerMap[p.id];
-        if (marker) {
-          if (matchType && matchText) {
-            if (!map.hasLayer(marker)) map.addLayer(marker);
-          } else {
-            if (map.hasLayer(marker)) map.removeLayer(marker);
-          }
-        }
-      });
     }
 
     /* ============================================================
@@ -809,9 +698,8 @@
     }
 
     /* ============================================================
-       8. МОДАЛЬНОЕ ОКНО (ДОБАВЛЕНИЕ)
+       8. ДОБАВЛЕНИЕ ТОЧКИ
        ============================================================ */
-    const addModal = document.getElementById('addModal');
     const addModeBtn = document.getElementById('addModeBtn');
 
     addModeBtn.addEventListener('click', function () {
@@ -820,47 +708,30 @@
       this.textContent = addMode ? '📍 Кликните на карту' : '➕ Добавить точку';
     });
 
-    map.on('click', function (e) {
+    map.on('click', async function (e) {
       if (!addMode) return;
-      tempLatLng = e.latlng;
-      addModal.classList.add('active');
-      
-      document.getElementById('m_name').value = '';
-      document.getElementById('m_address').value = '';
-      document.getElementById('m_types').value = '';
-      document.getElementById('m_hours').value = '';
-    });
 
-    document.getElementById('btnCancelModal').addEventListener('click', () => {
-      addModal.classList.remove('active');
-      addMode = false;
-      addModeBtn.classList.remove('active');
-      addModeBtn.textContent = '➕ Добавить точку';
-    });
-
-    document.getElementById('btnSaveModal').addEventListener('click', async () => {
-      const name = document.getElementById('m_name').value.trim();
-      if (!name) { alert('Введите название!'); return; }
+      const name = prompt('Название точки:');
+      if (!name) return;
 
       const newPoint = {
         name: name,
-        address: document.getElementById('m_address').value.trim() || '—',
-        latitude: tempLatLng.lat,
-        longitude: tempLatLng.lng,
-        accepted_types: document.getElementById('m_types').value.split(',').map(s => s.trim()).filter(Boolean),
-        working_hours: document.getElementById('m_hours').value.trim() || '—',
-        description: ''
+        address: prompt('Адрес:') || '—',
+        latitude: e.latlng.lat,
+        longitude: e.latlng.lng,
+        accepted_types: (prompt('Что принимают (через запятую):') || '')
+          .split(',').map(s => s.trim()).filter(Boolean),
+        working_hours: prompt('Часы работы:') || '—',
+        description: prompt('Описание:') || ''
       };
 
       const saved = await apiAddPoint(newPoint);
       points.push(saved);
       savePointsLocal(points);
-      
+
       addMarker(saved);
-      syncMarkers();
       renderList();
 
-      addModal.classList.remove('active');
       addMode = false;
       addModeBtn.classList.remove('active');
       addModeBtn.textContent = '➕ Добавить точку';
@@ -882,7 +753,6 @@
       points = points.filter(p => p.id !== id);
       savePointsLocal(points);
       renderList();
-      syncMarkers();
     }
 
     window.deletePoint = deletePoint;
@@ -911,14 +781,12 @@
         btn.classList.add('active');
         activeFilter = btn.dataset.filter;
         renderList();
-        syncMarkers();
       });
     });
 
     document.getElementById('searchInput').addEventListener('input', e => {
       searchText = e.target.value.trim().toLowerCase();
       renderList();
-      syncMarkers();
     });
 
     /* ============================================================
