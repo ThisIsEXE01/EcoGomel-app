@@ -238,27 +238,46 @@ body {
 
 .tags-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
-  gap: 8px;
+  grid-template-columns: repeat(auto-fill, minmax(70px, 1fr)); 
+  gap: 8px; 
+}
+
+.tag-icon {
+  width: 45px;
+  height: 45px;
+  fill: currentColor;
+}
+
+.tag b {
+  font-size: 0.65rem;
+  line-height: 1;
+  margin-bottom: 2px;
+  font-weight: 600;
 }
 
 .tag {
   background: var(--bg-card);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-sm);
-  padding: 8px 4px;
+  padding: 8px 4px 6px 4px; 
   color: var(--text-main);
   cursor: pointer;
   display: flex;
   flex-direction: column;
   align-items: center;
-  font-size: 0.75rem;
+  justify-content: center;
+  font-size: 0.7rem; 
   transition: background-color 0.3s ease, border-color 0.2s;
+  height: 74px; 
 }
 
 .tag span {
   color: var(--text-muted);
-  font-size: 0.65rem;
+  font-size: 0.5rem;      /* Делаем шрифт совсем мелким */
+  line-height: 1;
+  text-transform: uppercase; /* Все буквы заглавные */
+  letter-spacing: 0.5px;  /* Немного разряжаем буквы для аккуратности */
+  font-weight: 500;
 }
 
 .tag:hover {
@@ -296,7 +315,8 @@ body {
   padding: 24px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  align-items: flex-start; /* Выравнивание элементов карточки по левому краю */
+  gap: 8px; /* Уменьшили отступ, чтобы блок выглядел компактнее */
   transition: transform 0.2s, background-color 0.3s ease, border-color 0.3s ease;
   cursor: pointer;
 }
@@ -314,23 +334,40 @@ body {
   align-items: center;
   justify-content: center;
   border-radius: var(--radius-sm);
+  margin-bottom: 4px; /* Небольшой отступ перед заголовком */
+}
+
+.cards__icon {
+  background-color: rgba(255, 255, 255, 0.05);
+  width: 45px;
+  height: 45px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  margin-bottom: 4px; /* Небольшой отступ перед заголовком */
 }
 
 .card__icon img {
   width: 28px;
   height: 28px;
-  object-fit: contain;
+  object-fit: contain; /* Защищает иконку от искажения пропорций */
   display: block;
-
 }
 
 .card__title {
   font-size: 1.1rem;
+  font-weight: 600;
 }
 
 .card__count {
   font-size: 0.85rem;
   color: var(--text-muted);
+}
+
+[data-theme="dark"] .cards__icon {
+  /* Инвертируем цвет: черный становится белым */
+  filter: invert(1) brightness(0.9); 
 }
 
 /* ==================== 5. ДВУХКОЛОНОЧНЫЙ МАКЕТ (STRIP/DETAILS) ==================== */

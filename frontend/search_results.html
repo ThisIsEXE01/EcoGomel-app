@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Результаты поиска — ЭкоГомель</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+</head>
+<body>
+
+  <!-- ШАПКА -->
+  <header class="header">
+    <div class="container header__container">
+      <a href="index1.html" class="logo">
+        <span class="logo__icon"><img src="logo.png" alt="Логотип"></span>
+        <span class="logo__text">ЭкоГомель</span>
+      </a>
+      <nav class="nav">
+        <a href="index1.html" class="nav__link">Поиск</a>
+        <a href="map.html" class="nav__link">Карта</a>
+        <a href="about_project.html" class="nav__link">О проекте</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container" style="padding: 40px 20px;">
+    <div id="resultsHeader" style="margin-bottom: 30px;">
+      <h1 id="pageTitle" style="font-size: 1.8rem; margin-bottom: 10px;">Поиск отходов</h1>
+      <p id="pageSubtitle" style="color: var(--text-muted);">Ищем информацию в базе данных...</p>
+    </div>
+
+    <!-- Контейнер для динамического контента -->
+    <div id="resultsContainer">
+      <!-- Сюда динамически рендерится контент в зависимости от количества результатов -->
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="container footer__container">
+      <div class="footer__brand">
+        <h3>ЭкоГомель</h3>
+        <p>Гид по раздельному сбору мусора.</p>
+      </div>
+      <div class="footer__bottom">
+        <span>© 2026 ЭкоГомель. Все права защищены.</span>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    const API_BASE_URL = 'http://127.0.0.1:8000';
+    const API_WASTE_URL = `${API_BASE_URL}/api/waste/`;
+    const API_POINTS_URL = `${API_BASE_URL}/api/v1/points/`;
+
+    async function initResultsPage() {
+      const params = new URLSearchParams(window.location.search);
+      const query = params.get('query');
+      const id = params.get('id');
+
+      const titleEl = document.getElementById('pageTitle');
+      const subtitleEl = document.getElementById('pageSubtitle');
+      const container = document.getElementById('resultsContainer');
+
+      try {
+        if (id) {
+          // Сценарий 1: Запрос конкретного ID отхода
+          const res = await fetch(`${API_WASTE_URL}${id}/`);
+          if (!res.ok) throw new Error('Элемент не найден');
+          const item = await res.json();
+          renderSingleItem(item, container, titleEl, subtitleEl);
+        } else if (query) {
+          // Запрос по поисковой строке
+          const res = await fetch(`${API_WASTE_URL}?search=${encodeURIComponent(query)}`);
+          const data = await res.json();
+          const items = Array.isArray(data) ? data : (data.results || []);
+
+          if (items.length === 0) {
+            // Сценарий 3: Ничего не найдено
+            renderEmptyState(query, container, titleEl, subtitleEl);
+          } else if (items.length === 1) {
+            // Сценарий 1 (единственный результат)
+            renderSingleItem(items[0], container, titleEl, subtitleEl);
+          } else {
+            // Сценарий 2: Несколько результатов
+            renderMultipleItems(query, items, container, titleEl, subtitleEl);
+          }
+        } else {
+          titleEl.textContent = 'Параметры поиска не заданы';
+          subtitleEl.textContent = 'Вернитесь на главную страницу и введите запрос.';
+          container.innerHTML = '<a href="index1.html" class="btn btn--primary">На главную</a>';
+        }
+      } catch (err) {
+        console.error(err);
+        titleEl.textContent = 'Ошибка загрузки';
+        subtitleEl.textContent = 'Не удалось получить данные с сервера.';
+      }
+    }
+
+    // Рендер детальной информации по одному предмету
+    function renderSingleItem(item, container, titleEl, subtitleEl) {
+      titleEl.textContent = item.title || item.name;
+      subtitleEl.textContent = `Категория: ${item.category || 'Общая'} | Статус переработки`;
+
+      const isRecyclable = item.recyclable !== undefined ? item.recyclable : true;
+      const badgeClass = isRecyclable ? 'badge badge--success' : 'badge badge--warning';
+      const badgeText = isRecyclable ? '✔ Перерабатывается' : '✖ Не перерабатывается';
+
+      let stepsHtml = '';
+      if (item.preparation_steps) {
+        const steps = Array.isArray(item.preparation_steps) ? item.preparation_steps : [item.preparation_steps];
+        stepsHtml = steps.map((s, idx) => `<li><span class="step-num">${idx + 1}</span> ${s}</li>`).join('');
+      } else {
+        stepsHtml = '<li>Специальных инструкций по подготовке нет.</li>';
+      }
+
+      container.innerHTML = `
+        <div class="info-card" style="margin-bottom: 20px;">
+          <div class="info-card__header" style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Правила утилизации</h2>
+            <span class="${badgeClass}">${badgeText}</span>
+          </div>
+          ${item.hazard_class ? `<p style="margin-top: 10px;"><b>Класс опасности:</b> ${item.hazard_class}</p>` : ''}
+          ${item.what_happens_next ? `<p style="margin-top: 10px;"><b>Что происходит с отходом:</b> ${item.what_happens_next}</p>` : ''}
+        </div>
+
+        <div class="info-card">
+          <h3>Как подготовить к сдаче</h3>
+          <ul class="steps-list">${stepsHtml}</ul>
+        </div>
+        
+        <div style="margin-top: 25px;">
+          <a href="index1.html" class="btn btn--outline">&larr; Новый поиск</a>
+          <a href="map.html" class="btn btn--primary" style="margin-left: 10px;">Найти пункты приёма на карте</a>
+        </div>
+      `;
+    }
+
+    // Рендер списка при нескольких результатах
+    function renderMultipleItems(query, items, container, titleEl, subtitleEl) {
+      titleEl.textContent = `Результаты поиска: "${query}"`;
+      subtitleEl.textContent = `Найдено вариантов: ${items.length}. Выберите подходящий элемент:`;
+
+      const cardsHtml = items.map(item => `
+        <div class="info-card" style="margin-bottom: 15px; cursor: pointer; transition: transform 0.2s;" onclick="window.location.href='search_results.html?id=${item.id}'">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h3 style="color: var(--primary-color, #2d6a4f);">${item.title || item.name}</h3>
+            <span style="font-size: 0.85rem; background: #e9ecef; padding: 4px 8px; border-radius: 4px;">${item.category || 'Категория'}</span>
+          </div>
+          <p style="margin-top: 8px; color: var(--text-muted); font-size: 0.9rem;">${item.what_happens_next ? item.what_happens_next.substring(0, 100) + '...' : 'Кликните для подробной информации о переработке.'}</p>
+        </div>
+      `).join('');
+
+      container.innerHTML = `
+        <div style="margin-bottom: 20px;">${cardsHtml}</div>
+        <a href="index1.html" class="btn btn--outline">&larr; Вернуться к поиску</a>
+      `;
+    }
+
+    // Рендер пустого состояния (ничего не найдено)
+    async function renderEmptyState(query, container, titleEl, subtitleEl) {
+      titleEl.textContent = `По запросу "${query}" ничего не найдено`;
+      subtitleEl.textContent = 'К сожалению, такого предмета нет в нашей детальной базе отходов.';
+
+      // Попробуем загрузить общие пункты приёма, чтобы пользователь не ушел с пустыми руками
+      let pointsCount = 0;
+      try {
+        const res = await fetch(API_POINTS_URL);
+        if (res.ok) {
+          const data = await res.json();
+          const points = Array.isArray(data) ? data : (data.results || []);
+          pointsCount = points.length;
+        }
+      } catch(e) {}
+
+      container.innerHTML = `
+        <div class="info-card" style="text-align: center; padding: 40px 20px;">
+          <h3>Что можно сделать?</h3>
+          <p style="margin: 15px 0; color: var(--text-muted);">
+            Попробуйте изменить формулировку запроса (например, искать просто «пластик» или «батарейки») 
+            или воспользуйтесь интерактивной картой города.
+          </p>
+          <div style="margin-top: 20px;">
+            <a href="index1.html" class="btn btn--primary">Изменить запрос</a>
+            <a href="map.html" class="btn btn--outline" style="margin-left: 10px;">Смотреть карту (${pointsCount} пунктов)</a>
+          </div>
+        </div>
+      `;
+    }
+
+    document.addEventListener('DOMContentLoaded', initResultsPage);
+  </script>
+</body>
+</html>
