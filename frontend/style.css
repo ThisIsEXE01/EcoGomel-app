@@ -348,6 +348,11 @@ a.card {
 
 }
 
+/* iron.svg нарисован светло-серым под тёмную тему. */
+[data-theme="light"] .card__icon img[src$="iron.svg"] {
+  filter: invert(1) brightness(0.7);
+}
+
 .card__title {
   font-size: 1.1rem;
 }
