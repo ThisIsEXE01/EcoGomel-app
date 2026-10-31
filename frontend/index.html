@@ -80,55 +80,8 @@
           <a href="#" class="link-more">Все категории &rarr;</a>
         </div>
 
-        <div class="cards-grid">
-          <!-- Карточка 1 -->
-          <div class="card">
-            <div class="card__icon">
-              <img src="battery.svg" alt="Батарейки">
-            </div>
-            <h3 class="card__title">Батарейки</h3>
-            <span class="card__count">340 пунктов приема</span>
-          </div>
-          <!-- Карточка 2 -->
-          <div class="card">
-            <div class="card__icon">
-              <img src="electric.svg" alt="Электроника">
-            </div>
-            <h3 class="card__title">Электроника</h3>
-            <span class="card__count">128 пунктов приема</span>
-          </div>
-          <!-- Карточка 3 -->
-          <div class="card">
-            <div class="card__icon">
-              <img src="plastic.svg" alt="Пластик">
-            </div>
-            <h3 class="card__title">Пластик</h3>
-            <span class="card__count">512 пунктов приема</span>
-          </div>
-          <!-- Карточка 4 -->
-          <div class="card">
-            <div class="card__icon">
-              <img src="glass.svg" alt="Стекло">
-            </div>
-            <h3 class="card__title">Стекло</h3>
-            <span class="card__count">256 пунктов приема</span>
-          </div>
-          <!-- Карточка 5 -->
-          <div class="card">
-            <div class="card__icon">
-              <img src="fabric.png" alt="Текстиль">
-            </div>
-            <h3 class="card__title">Текстиль</h3>
-            <span class="card__count">94 пунктов приема</span>
-          </div>
-          <!-- Карточка 6 -->
-          <div class="card">
-            <div class="card__icon">
-              <img src="chemistry.png" alt="Бытовая химия">
-            </div>
-            <h3 class="card__title">Бытовая химия</h3>
-            <span class="card__count">115 пунктов приема</span>
-          </div>
+        <div class="cards-grid" id="categoriesGrid">
+          <p class="cards-loading">Загрузка категорий...</p>
         </div>
       </div>
     </section>
@@ -273,6 +226,60 @@
         });
       }
     });
+  </script>
+
+  <script src="api.js"></script>
+  <script>
+    const CATEGORY_CARDS = [
+      { category: 'Пластик', icon: 'plastic.svg' },
+      { category: 'Стекло', icon: 'glass.svg' },
+      { category: 'Макулатура', icon: 'paper.svg' },
+      { category: 'Металлолом', icon: 'iron.svg' },
+      { category: 'Электроника', icon: 'electric.svg' },
+      { category: 'Опасные отходы', icon: 'battery.svg' },
+    ];
+
+    function wasteCountLabel(count) {
+      const mod10 = count % 10;
+      const mod100 = count % 100;
+      let word = 'видов';
+
+      if (mod10 === 1 && mod100 !== 11) {
+        word = 'вид';
+      } else if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) {
+        word = 'вида';
+      }
+
+      return `${count} ${word} отходов`;
+    }
+
+    async function renderCategoryCards() {
+      const container = document.getElementById('categoriesGrid');
+      if (!container) return;
+
+      try {
+        const waste = await EcoAPI.getWaste();
+
+        container.innerHTML = CATEGORY_CARDS.map(({ category, icon }) => {
+          const count = waste.filter((item) => item.category === category).length;
+
+          return `
+            <div class="card" data-category="${category}">
+              <div class="card__icon">
+                <img src="${icon}" alt="${category}">
+              </div>
+              <h3 class="card__title">${category}</h3>
+              <span class="card__count">${wasteCountLabel(count)}</span>
+            </div>
+          `;
+        }).join('');
+      } catch (error) {
+        console.error('Не удалось загрузить категории:', error);
+        container.innerHTML = '<p>Не удалось загрузить категории. Проверьте, запущен ли сервер.</p>';
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', renderCategoryCards);
   </script>
 
   <script src="theme.js"></script>

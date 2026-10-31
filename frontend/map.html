@@ -554,6 +554,7 @@
 
   <!-- Leaflet JS -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="api.js"></script>
 
   <!-- ============ ПЕРЕКЛЮЧАТЕЛЬ ТЕМЫ ============ -->
   <script>
@@ -613,7 +614,7 @@
        2. КОНФИГУРАЦИЯ
        ============================================================ */
     const DATA_SOURCE = 'local';
-    const API_URL = 'http://localhost:8000/api/v1/points';
+    const API_URL = `${API_BASE_URL}/points`;
     const LS_KEY = 'ecogomel_points';
 
     /* ============================================================
