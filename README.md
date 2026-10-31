@@ -42,3 +42,16 @@ python manage.py migrate
 python manage.py import_waste
 python manage.py import_dropoff_points
 python manage.py runserver
+```
+
+Бэкенд будет доступен по адресу `http://localhost:8000`, API — по префиксу `/api/`.
+
+### 2. Клиент (Frontend):
+Бэкенд должен быть запущен. Откройте `frontend/index.html` в браузере — локальный сервер для фронтенда не нужен.
+
+Адрес API задаётся в одном месте — `frontend/api.js` (`API_BASE_URL`).
+
+### Основные эндпоинты API:
+- `GET /api/waste/` — список отходов (поиск и фильтры через query-параметры);
+- `GET /api/waste/<id>/` — один отход;
+- `GET /api/points/` — пункты приёма (фильтр `?waste_id=<id>`).
