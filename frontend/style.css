@@ -249,6 +249,7 @@ body {
   padding: 8px 4px;
   color: var(--text-main);
   cursor: pointer;
+  text-decoration: none;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -259,6 +260,24 @@ body {
 .tag span {
   color: var(--text-muted);
   font-size: 0.65rem;
+  text-transform: uppercase;
+}
+
+.tag b {
+  font-size: 0.65rem;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.tag__icon {
+  width: 45px;
+  height: 45px;
+  object-fit: contain;
+  margin-bottom: 4px;
+}
+
+[data-theme="dark"] .tag__icon {
+  filter: invert(1) brightness(0.9);
 }
 
 .tag:hover {

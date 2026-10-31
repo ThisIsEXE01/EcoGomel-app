@@ -56,18 +56,7 @@
         <!-- Быстрый выбор маркировки -->
         <div class="tags-section">
           <span class="tags-section__label">Или выберите код маркировки для быстрой справки:</span>
-          <div class="tags-grid">
-            <button class="tag"><b>01 PET</b> <span>ПЛАСТИК</span></button>
-            <button class="tag"><b>02 HDPE</b> <span>ПЛАСТИК</span></button>
-            <button class="tag"><b>03 PVC</b> <span>ПЛАСТИК</span></button>
-            <button class="tag"><b>04 LDPE</b> <span>ПЛАСТИК</span></button>
-            <button class="tag"><b>05 PP</b> <span>ПЛАСТИК</span></button>
-            <button class="tag"><b>06 PS</b> <span>ПЛАСТИК</span></button>
-            <button class="tag"><b>07 Other</b> <span>ДРУГОЕ</span></button>
-            <button class="tag"><b>PAP 20</b> <span>БУМАГА</span></button>
-            <button class="tag"><b>GL 70</b> <span>СТЕКЛО</span></button>
-            <button class="tag tag--center"><b>FE 40</b> <span>МЕТАЛЛ</span></button>
-          </div>
+          <div class="tags-grid" id="tagsGrid"></div>
         </div>
       </div>
     </section>
@@ -239,6 +228,29 @@
       { category: 'Опасные отходы', icon: 'battery.svg' },
     ];
 
+    // Ключ — первый токен кода из БД: "01 PET" -> "01", "PAP 20-22" -> "PAP".
+    const CODE_ICONS = {
+      '01': 'plastic_01.svg',
+      '02': 'plastic_02.svg',
+      '03': 'plastic_03.svg',
+      '04': 'plastic_04.svg',
+      '05': 'plastic_05.svg',
+      '06': 'plastic_06.svg',
+      '07': 'plastic_07.svg',
+      'PAP': 'paper_20.svg',
+      'GL': 'glass_70.svg',
+      'FE': 'metall_40.svg',
+    };
+
+    function escapeHtml(value) {
+      return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
     function wasteCountLabel(count) {
       const mod10 = count % 10;
       const mod100 = count % 100;
@@ -253,33 +265,60 @@
       return `${count} ${word} отходов`;
     }
 
-    async function renderCategoryCards() {
+    function renderCategoryCards(waste) {
       const container = document.getElementById('categoriesGrid');
       if (!container) return;
 
-      try {
-        const waste = await EcoAPI.getWaste();
+      container.innerHTML = CATEGORY_CARDS.map(({ category, icon }) => {
+        const count = waste.filter((item) => item.category === category).length;
 
-        container.innerHTML = CATEGORY_CARDS.map(({ category, icon }) => {
-          const count = waste.filter((item) => item.category === category).length;
+        return `
+          <a class="card" href="waste.html?category=${encodeURIComponent(category)}" data-category="${category}">
+            <div class="card__icon">
+              <img src="${icon}" alt="${category}">
+            </div>
+            <h3 class="card__title">${category}</h3>
+            <span class="card__count">${wasteCountLabel(count)}</span>
+          </a>
+        `;
+      }).join('');
+    }
+
+    function renderCodeTags(waste) {
+      const container = document.getElementById('tagsGrid');
+      if (!container) return;
+
+      container.innerHTML = waste
+        .filter((item) => item.code)
+        .map((item) => {
+          const icon = CODE_ICONS[item.code.split(' ')[0]];
 
           return `
-            <a class="card" href="waste.html?category=${encodeURIComponent(category)}" data-category="${category}">
-              <div class="card__icon">
-                <img src="${icon}" alt="${category}">
-              </div>
-              <h3 class="card__title">${category}</h3>
-              <span class="card__count">${wasteCountLabel(count)}</span>
+            <a class="tag" href="waste.html?id=${item.id}">
+              ${icon ? `<img src="${icon}" alt="" class="tag__icon">` : ''}
+              <b>${escapeHtml(item.code)}</b>
+              <span>${escapeHtml(item.category)}</span>
             </a>
           `;
-        }).join('');
+        })
+        .join('');
+    }
+
+    async function renderWasteSections() {
+      try {
+        const waste = await EcoAPI.getWaste();
+        renderCategoryCards(waste);
+        renderCodeTags(waste);
       } catch (error) {
-        console.error('Не удалось загрузить категории:', error);
-        container.innerHTML = '<p>Не удалось загрузить категории. Проверьте, запущен ли сервер.</p>';
+        console.error('Не удалось загрузить отходы:', error);
+
+        const message = '<p>Не удалось загрузить данные. Проверьте, запущен ли сервер.</p>';
+        document.getElementById('categoriesGrid').innerHTML = message;
+        document.getElementById('tagsGrid').innerHTML = message;
       }
     }
 
-    document.addEventListener('DOMContentLoaded', renderCategoryCards);
+    document.addEventListener('DOMContentLoaded', renderWasteSections);
   </script>
 
   <script src="theme.js"></script>
