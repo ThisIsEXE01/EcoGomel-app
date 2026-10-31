@@ -130,9 +130,7 @@ MAILERS = {
     },
 }
 
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5173",
-    "http://127.0.0.1:5173",
-    "http://localhost:3000",
-    "http://127.0.0.1:3000",
-]
+# CORS: локально фронтенд открывается как file:// (Origin: null),
+# поэтому в режиме разработки разрешаем все origin'ы.
+# При DEBUG=False на хостинге задаём реальные домены через CORS_ALLOWED_ORIGINS.
+CORS_ALLOW_ALL_ORIGINS = DEBUG
