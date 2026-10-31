@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Отход — ЭкоГомель</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+  <!-- ШАПКА / NAVIGATION -->
+  <header class="header">
+    <div class="container header__container">
+      <a href="index.html" class="logo">
+        <span class="logo__icon">
+          <img src="logo.png" alt="Логотип">
+        </span>
+        <span class="logo__text">ЭкоГомель</span>
+      </a>
+      <nav class="nav">
+        <a href="index.html" class="nav__link">Поиск</a>
+        <a href="map.html" class="nav__link">Карта</a>
+        <a href="about_project.html" class="nav__link">О проекте</a>
+        <button id="theme-toggle" class="theme-toggle" aria-label="Переключить тему">
+          <img src="moon.svg" alt="Луна">
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container" style="padding: 40px 20px;">
+    <div id="wasteContent">
+      <p class="card__count">Загрузка...</p>
+    </div>
+  </main>
+
+  <!-- ПОДВАЛ / FOOTER -->
+  <footer class="footer">
+    <div class="container footer__container">
+      <div class="footer__brand">
+        <h3>ЭкоГомель</h3>
+        <p>Удобный и понятный гид по раздельному сбору мусора и утилизации сложных отходов в вашем городе. Помогаем
+          делать мир чище, шаг за шагом.</p>
+      </div>
+      <div class="footer__bottom">
+        <span>© 2026 ЭкоГомель. Все права защищены.</span>
+        <span>Данные актуальны на сентябрь 2026</span>
+      </div>
+    </div>
+  </footer>
+
+  <script src="api.js"></script>
+  <script src="theme.js"></script>
+  <script>
+    const content = document.getElementById('wasteContent');
+
+    const CATEGORY_ICONS = {
+      'Пластик': 'plastic.svg',
+      'Стекло': 'glass.svg',
+      'Макулатура': 'paper.svg',
+      'Металлолом': 'iron.svg',
+      'Электроника': 'electric.svg',
+      'Опасные отходы': 'battery.svg',
+    };
+
+    function escapeHtml(value) {
+      return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function renderBadges(item) {
+      const badges = [
+        item.recyclable
+          ? '<span class="badge badge--success">✔ перерабатывается</span>'
+          : '<span class="badge badge--warning">✖ не перерабатывается</span>',
+      ];
+
+      if (item.hazard_class) {
+        badges.push(`<span class="badge badge--warning">${escapeHtml(item.hazard_class)}</span>`);
+      }
+
+      return `<div class="badges">${badges.join('')}</div>`;
+    }
+
+    function renderSteps(steps) {
+      if (!Array.isArray(steps) || steps.length === 0) {
+        return '<p class="card__count">Инструкция пока не добавлена.</p>';
+      }
+
+      return `
+        <ul class="steps-list">
+          ${steps.map((step, index) => `
+            <li>
+              <span class="step-num">${index + 1}</span>
+              <span>${escapeHtml(step)}</span>
+            </li>
+          `).join('')}
+        </ul>
+      `;
+    }
+
+    function renderPoints(points) {
+      if (points.length === 0) {
+        return '<p class="card__count">Пункты приёма пока не указаны.</p>';
+      }
+
+      return `
+        <div class="points-list">
+          ${points.map((point) => `
+            <div class="point-card">
+              <div class="point-card__header">
+                <h5>${escapeHtml(point.name)}</h5>
+              </div>
+              <p class="point-card__address">${escapeHtml(point.address)}</p>
+              <div class="point-card__footer">
+                <span>${escapeHtml(point.working_hours)}</span>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      `;
+    }
+
+    function renderWaste(item, points) {
+      document.title = `${item.name} — ЭкоГомель`;
+
+      content.innerHTML = `
+        <a href="index.html" class="link-more">&larr; На главную</a>
+
+        <section class="info-card" style="margin-top: 20px;">
+          <div class="info-card__header">
+            <h1 style="font-size: 1.6rem;">${escapeHtml(item.name)}</h1>
+            ${renderBadges(item)}
+          </div>
+          <p class="card__count">
+            Категория: ${escapeHtml(item.category)}${item.code ? ` · Код: ${escapeHtml(item.code)}` : ''}
+          </p>
+        </section>
+
+        <section class="info-card" style="margin-top: 20px;">
+          <h3>Как подготовить к сдаче</h3>
+          ${renderSteps(item.preparation_steps)}
+        </section>
+
+        <section class="info-card" style="margin-top: 20px;">
+          <h3>Что происходит при переработке?</h3>
+          <p class="info-card__desc">
+            ${escapeHtml(item.what_happens_next) || 'Информация пока не добавлена.'}
+          </p>
+        </section>
+
+        <section class="info-card" style="margin-top: 20px;">
+          <h3>Пункты приёма</h3>
+          ${renderPoints(points)}
+        </section>
+      `;
+    }
+
+    function renderWasteList(items, title) {
+      document.title = `${title} — ЭкоГомель`;
+
+      if (items.length === 0) {
+        content.innerHTML = `
+          <a href="index.html" class="link-more">&larr; На главную</a>
+          <p style="margin-top: 20px;">Отходы не найдены.</p>
+        `;
+        return;
+      }
+
+      content.innerHTML = `
+        <a href="index.html" class="link-more">&larr; На главную</a>
+        <h1 class="section-title" style="margin-top: 20px;">${escapeHtml(title)}</h1>
+        <div class="cards-grid">
+          ${items.map((item) => `
+            <a class="card" href="waste.html?id=${item.id}" style="text-decoration: none; color: inherit;">
+              ${CATEGORY_ICONS[item.category] ? `
+                <div class="card__icon">
+                  <img src="${CATEGORY_ICONS[item.category]}" alt="${escapeHtml(item.category)}">
+                </div>
+              ` : ''}
+              <h3 class="card__title">${escapeHtml(item.name)}</h3>
+              <span class="card__count">
+                ${escapeHtml(item.category)}${item.code ? ` · ${escapeHtml(item.code)}` : ''}
+              </span>
+            </a>
+          `).join('')}
+        </div>
+      `;
+    }
+
+    async function initWastePage() {
+      const params = new URLSearchParams(window.location.search);
+      const id = params.get('id');
+      const category = params.get('category');
+
+      try {
+        if (id) {
+          const [item, points] = await Promise.all([
+            EcoAPI.getWasteItem(id),
+            EcoAPI.getPoints({ waste_id: id }),
+          ]);
+          renderWaste(item, points);
+          return;
+        }
+
+        const items = await EcoAPI.getWaste(category ? { category } : {});
+        renderWasteList(items, category || 'Все отходы');
+      } catch (error) {
+        console.error('Не удалось загрузить отходы:', error);
+        content.innerHTML = '<p>Не удалось загрузить данные. Проверьте, запущен ли сервер.</p>';
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', initWastePage);
+  </script>
+</body>
+
+</html>

@@ -77,7 +77,7 @@
       <div class="container">
         <div class="section-header">
           <h2 class="section-title">Популярные запросы</h2>
-          <a href="#" class="link-more">Все категории &rarr;</a>
+          <a href="waste.html" class="link-more">Все категории &rarr;</a>
         </div>
 
         <div class="cards-grid" id="categoriesGrid">
@@ -264,13 +264,13 @@
           const count = waste.filter((item) => item.category === category).length;
 
           return `
-            <div class="card" data-category="${category}">
+            <a class="card" href="waste.html?category=${encodeURIComponent(category)}" data-category="${category}">
               <div class="card__icon">
                 <img src="${icon}" alt="${category}">
               </div>
               <h3 class="card__title">${category}</h3>
               <span class="card__count">${wasteCountLabel(count)}</span>
-            </div>
+            </a>
           `;
         }).join('');
       } catch (error) {
