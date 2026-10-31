@@ -13,7 +13,7 @@
 ---
 
 ## 🛠 Технологический стек
-- **Backend:** Python 3.15, Django 5, Django REST Framework, SQLite
+- **Backend:** Python 3.12+, Django 6.1, SQLite
 - **Frontend:** HTML5, CSS3, JavaScript, библиотека Leaflet.js
 - **Дизайн & Айдентика:** Figma, векторные SVG-иконки
 - **Управление проектом:** Jira Cloud, GitHub (Git Flow)
