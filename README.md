@@ -55,3 +55,5 @@ python manage.py runserver
 - `GET /api/waste/` — список отходов (поиск и фильтры через query-параметры);
 - `GET /api/waste/<id>/` — один отход;
 - `GET /api/points/` — пункты приёма (фильтр `?waste_id=<id>`).
+
+Подробнее об интеграции с API — [docs/api-integration.md](docs/api-integration.md) (English: [api-integration.en.md](docs/api-integration.en.md)).
