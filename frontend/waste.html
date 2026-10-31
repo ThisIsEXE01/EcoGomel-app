@@ -203,7 +203,10 @@
         if (id) {
           const [item, points] = await Promise.all([
             EcoAPI.getWasteItem(id),
-            EcoAPI.getPoints({ waste_id: id }),
+            EcoAPI.getPoints({ waste_id: id }).catch((error) => {
+              console.warn('Не удалось загрузить пункты приёма:', error);
+              return [];
+            }),
           ]);
           renderWaste(item, points);
           return;
