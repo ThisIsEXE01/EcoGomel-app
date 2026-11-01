@@ -5,7 +5,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Установка начальной темы из localstorage или по умолчанию
   if (currentTheme === 'light') {
     document.documentElement.setAttribute('data-theme', 'light');
-    if (themeToggleBtn) themeToggleBtn.innerHTML = '<img src="sun.png" alt="Светлая тема" class="theme-icon">';
+    if (themeToggleBtn) themeToggleBtn.innerHTML = '<img src="sun.svg" alt="Светлая тема" class="theme-icon">';
   } else {
     document.documentElement.setAttribute('data-theme', 'dark');
     
@@ -16,7 +16,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // ломая верстку кнопки и иконки.
     // Теперь добавлен символ '<' в начале строки, и иконка отображается корректно.
     // ========================================================
-    if (themeToggleBtn) themeToggleBtn.innerHTML = '<img src="moon.png" alt="Тёмная тема" class="theme-icon">';
+    if (themeToggleBtn) themeToggleBtn.innerHTML = '<img src="moon.svg" alt="Тёмная тема" class="theme-icon">';
   }
 
   // Переключение темы при клике
@@ -28,12 +28,12 @@ document.addEventListener('DOMContentLoaded', () => {
         // Переключаем на тёмную
         document.documentElement.setAttribute('data-theme', 'dark');
         localStorage.setItem('theme', 'dark');
-        themeToggleBtn.innerHTML = '<img src="moon.png" alt="Тёмная тема" class="theme-icon">';
+        themeToggleBtn.innerHTML = '<img src="moon.svg" alt="Тёмная тема" class="theme-icon">';
       } else {
         // Переключаем на светлую
         document.documentElement.setAttribute('data-theme', 'light');
         localStorage.setItem('theme', 'light');
-        themeToggleBtn.innerHTML = '<img src="sun.png" alt="Светлая тема" class="theme-icon">';
+        themeToggleBtn.innerHTML = '<img src="sun.svg" alt="Светлая тема" class="theme-icon">';
       }
     });
   }
