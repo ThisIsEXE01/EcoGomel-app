@@ -109,6 +109,13 @@
       transition: color 0.3s ease;
     }
 
+    .logo img {
+      width: 52px;
+      height: 52px;
+      object-fit: contain;
+      display: block;
+    }
+
     .nav {
       display: flex;
       align-items: center;
@@ -485,13 +492,18 @@
   <!-- ШАПКА -->
   <header class="header">
     <div class="container header__container">
-      <a href="index.html" class="logo">♻ ЭкоГомель</a>
+      <a href="index.html" class="logo">
+        <span class="logo__icon">
+          <img src="logo.svg" alt="Логотип">
+        </span>
+        <span class="logo__text">ЭкоГомель</span>
+      </a>
       <nav class="nav">
         <a href="index.html" class="nav__link">Главная</a>
         <a href="map.html" class="nav__link active">Карта</a>
         <a href="about_project.html" class="nav__link">О проекте</a>
         <button id="theme-toggle" class="theme-toggle" aria-label="Переключить тему">
-          <img src="moon.png" alt="Луна">
+          <img src="moon.svg" alt="Луна">
         </button>
       </nav>
     </div>
@@ -564,10 +576,10 @@
 
       if (saved === 'light') {
         document.documentElement.setAttribute('data-theme', 'light');
-        btn.innerHTML = '<img src="sun.png" alt="Светлая тема" style="width:20px; height:20px; pointer-events:none;">';
+        btn.innerHTML = '<img src="sun.svg" alt="Светлая тема" style="width:20px; height:20px; pointer-events:none;">';
       } else {
         document.documentElement.setAttribute('data-theme', 'dark');
-        btn.innerHTML = '<img src="moon.png" alt="Тёмная тема" style="width:20px; height:20px; pointer-events:none;">';
+        btn.innerHTML = '<img src="moon.svg" alt="Тёмная тема" style="width:20px; height:20px; pointer-events:none;">';
       }
 
       btn.addEventListener('click', () => {
@@ -575,11 +587,11 @@
         if (cur === 'light') {
           document.documentElement.setAttribute('data-theme', 'dark');
           localStorage.setItem('theme', 'dark');
-          btn.innerHTML = '<img src="moon.png" alt="Тёмная тема" style="width:20px; height:20px; pointer-events:none;">';
+          btn.innerHTML = '<img src="moon.svg" alt="Тёмная тема" style="width:20px; height:20px; pointer-events:none;">';
         } else {
           document.documentElement.setAttribute('data-theme', 'light');
           localStorage.setItem('theme', 'light');
-          btn.innerHTML = '<img src="sun.png" alt="Светлая тема" style="width:20px; height:20px; pointer-events:none;">';
+          btn.innerHTML = '<img src="sun.svg" alt="Светлая тема" style="width:20px; height:20px; pointer-events:none;">';
         }
       });
     })();
