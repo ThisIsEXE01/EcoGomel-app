@@ -3,13 +3,13 @@
 
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>ЭкоГомель — Карта пунктов приёма</title>
 
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 
   <style>
-    /* ==================== 1. ПЕРЕМЕННЫЕ (тёмная тема по умолчанию) ==================== */
+    /* ==================== 1. ПЕРЕМЕННЫЕ ==================== */
     :root {
       --bg-dark: #0d1210;
       --bg-card: #141c18;
@@ -58,8 +58,7 @@
       padding: 0;
     }
 
-    html,
-    body {
+    html, body {
       height: 100%;
       overflow: hidden;
     }
@@ -106,12 +105,11 @@
       color: var(--logo-color);
       font-weight: 700;
       font-size: 1.2rem;
-      transition: color 0.3s ease;
     }
-
-    .logo img {
-      width: 52px;
-      height: 52px;
+    
+    .logo__icon img {
+      width: 32px;
+      height: 32px;
       object-fit: contain;
       display: block;
     }
@@ -129,14 +127,12 @@
       transition: color 0.2s;
     }
 
-    .nav__link:hover,
-    .nav__link.active {
+    .nav__link:hover, .nav__link.active {
       color: var(--text-main);
       border-bottom: 2px solid var(--accent-light);
       padding-bottom: 4px;
     }
 
-    /* Кнопка переключения темы */
     .theme-toggle {
       background: transparent;
       border: 1px solid var(--border-color);
@@ -157,19 +153,16 @@
     }
     
     .theme-toggle img {
-      width: 20px;
-      height: 20px;
-      object-fit: contain;
-      display: block;
-      pointer-events: none;
+      width: 20px; height: 20px; object-fit: contain; display: block; pointer-events: none;
     }
 
-    /* ==================== 3. КАРТА ==================== */
+    /* ==================== 3. ДЕСКТОПНАЯ ВЕРСИЯ ==================== */
     .main-layout {
       display: flex;
       flex: 1;
       height: calc(100vh - 70px);
       overflow: hidden;
+      position: relative;
     }
 
     #sidebar {
@@ -179,13 +172,16 @@
       display: flex;
       flex-direction: column;
       z-index: 10;
-      transition: background-color 0.3s ease, border-color 0.3s ease;
+    }
+
+    .sidebar-top {
+      display: flex;
+      flex-direction: column;
     }
 
     .search-box {
       padding: 14px;
       border-bottom: 1px solid var(--border-color);
-      transition: border-color 0.3s ease;
     }
 
     .search-box input {
@@ -197,11 +193,6 @@
       color: var(--text-main);
       font-size: 0.9rem;
       outline: none;
-      transition: border-color 0.2s, background-color 0.3s ease, color 0.3s ease;
-    }
-
-    .search-box input:focus {
-      border-color: var(--accent-light);
     }
 
     .filters {
@@ -210,7 +201,6 @@
       flex-wrap: wrap;
       gap: 6px;
       border-bottom: 1px solid var(--border-color);
-      transition: border-color 0.3s ease;
     }
 
     .filters button {
@@ -235,47 +225,40 @@
       border-color: var(--accent-green);
     }
 
+    /* Сетка 2 на 2 для кнопок */
     .actions {
       padding: 10px 14px;
-      display: flex;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
       gap: 8px;
       border-bottom: 1px solid var(--border-color);
-      transition: border-color 0.3s ease;
     }
 
     .actions button {
-      flex: 1;
-      padding: 8px;
+      width: 100%;
+      padding: 10px 4px;
       border: none;
       border-radius: var(--radius-sm);
       cursor: pointer;
       font-size: 0.8rem;
       font-weight: 600;
       transition: 0.2s;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      overflow: hidden;
     }
 
-    #addModeBtn {
-      background-color: var(--accent-green);
-      color: #fff;
-    }
-
-    #addModeBtn:hover {
-      background-color: var(--accent-green-hover);
-    }
-
-    #addModeBtn.active {
-      background-color: #d97706;
-      color: #fff;
-    }
-
-    #clearAllBtn {
-      background-color: #dc2626;
-      color: #fff;
-    }
-
-    #clearAllBtn:hover {
-      opacity: 0.9;
-    }
+    #addModeBtn { background-color: var(--accent-green); color: #fff; }
+    #addModeBtn:hover { background-color: var(--accent-green-hover); }
+    #addModeBtn.active { background-color: #d97706; }
+    #clearAllBtn { background-color: #dc2626; color: #fff; }
+    #clearAllBtn:hover { opacity: 0.9; }
+    #geoBtn { background-color: #2563eb; color: #fff; }
+    #geoBtn:hover { background-color: #1d4ed8; }
+    #geoBtn.loading { opacity: 0.6; }
+    #nearestBtn { background-color: #8b5cf6; color: #fff; }
+    #nearestBtn:hover { background-color: #7c3aed; }
+    #nearestBtn.active { background-color: #f59e0b; }
 
     #points-list {
       flex: 1;
@@ -287,248 +270,147 @@
       padding: 14px 18px;
       border-bottom: 1px solid var(--border-color);
       cursor: pointer;
-      transition: background-color 0.15s, border-color 0.3s ease;
+      transition: background-color 0.15s;
     }
 
-    .point-card:hover {
-      background-color: var(--bg-card-hover);
-    }
+    .point-card:hover { background-color: var(--bg-card-hover); }
+    .point-card.active { background-color: var(--bg-card-hover); border-left: 4px solid var(--accent-light); }
 
-    .point-card.active {
-      background-color: var(--bg-card-hover);
-      border-left: 4px solid var(--accent-light);
-    }
+    .point-name { font-size: 0.95rem; font-weight: 600; margin-bottom: 4px; }
+    .point-address { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 8px; }
+    .point-hours { font-size: 0.75rem; color: var(--text-muted); }
+    .point-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 8px; }
+    .point-tags span { padding: 2px 6px; background-color: var(--tag-bg); color: var(--accent-light); border-radius: 4px; font-size: 0.7rem; }
 
-    .point-name {
-      font-size: 0.95rem;
-      font-weight: 600;
-      color: var(--text-main);
-      margin-bottom: 4px;
-    }
-
-    .point-address {
-      font-size: 0.8rem;
-      color: var(--text-muted);
-      margin-bottom: 8px;
-    }
-
-    .point-hours {
-      font-size: 0.75rem;
-      color: var(--text-muted);
-    }
-
-    .point-tags {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 4px;
-      margin-bottom: 8px;
-    }
-
-    .point-tags span {
-      padding: 2px 6px;
-      background-color: var(--tag-bg);
-      color: var(--accent-light);
-      border-radius: 4px;
-      font-size: 0.7rem;
-    }
-
-    /* Карта */
     #map {
       flex: 1;
       height: 100%;
       background-color: var(--bg-dark);
-      transition: background-color 0.3s ease;
     }
 
-    /* Popup Leaflet */
-    .leaflet-popup-content-wrapper {
-      background-color: var(--bg-card);
-      color: var(--text-main);
-      border-radius: var(--radius-sm);
-      border: 1px solid var(--border-color);
-      transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
-    }
+    /* ==================== 4. POPUP, МАРКЕРЫ ==================== */
+    .leaflet-popup-content-wrapper { background-color: var(--bg-card); color: var(--text-main); border-radius: var(--radius-sm); border: 1px solid var(--border-color); }
+    .leaflet-popup-tip { background-color: var(--bg-card); }
+    .leaflet-popup-close-button { color: var(--text-muted) !important; }
+    .popup-title { font-size: 0.95rem; font-weight: bold; margin-bottom: 4px; }
+    .popup-address { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 6px; }
+    .popup-hours { font-size: 0.75rem; color: var(--text-muted); }
+    .popup-desc { font-size: 0.75rem; color: var(--text-muted); margin-top: 6px; }
+    .popup-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 6px; }
+    .popup-tags span { padding: 2px 6px; background-color: var(--tag-bg); color: var(--accent-light); border-radius: 3px; font-size: 0.7rem; }
+    
+    .popup-delete { margin-top: 8px; padding: 4px 10px; background-color: #dc2626; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 0.7rem; width: 100%; transition: background 0.2s; }
+    .popup-delete:hover { background-color: #b91c1c; }
 
-    .leaflet-popup-tip {
-      background-color: var(--bg-card);
-      transition: background-color 0.3s ease;
-    }
+    .custom-marker { width: 18px; height: 18px; background-color: var(--accent-light); border: 2px solid var(--bg-card); border-radius: 50%; box-shadow: 0 0 8px var(--shadow-marker); cursor: pointer; }
+    [data-theme="dark"] .leaflet-tile-pane { filter: invert(1) hue-rotate(180deg) brightness(0.95) contrast(0.9); }
 
-    .leaflet-popup-close-button {
-      color: var(--text-muted) !important;
-    }
-
-    .popup-title {
-      font-size: 0.95rem;
-      font-weight: bold;
-      color: var(--text-main);
-      margin-bottom: 4px;
-    }
-
-    .popup-address {
-      font-size: 0.8rem;
-      color: var(--text-muted);
-      margin-bottom: 6px;
-    }
-
-    .popup-hours {
-      font-size: 0.75rem;
-      color: var(--text-muted);
-    }
-
-    .popup-desc {
-      font-size: 0.75rem;
-      color: var(--text-muted);
-      margin-top: 6px;
-      line-height: 1.4;
-    }
-
-    .popup-tags {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 4px;
-      margin-bottom: 6px;
-    }
-
-    .popup-tags span {
-      padding: 2px 6px;
-      background-color: var(--tag-bg);
-      color: var(--accent-light);
-      border-radius: 3px;
-      font-size: 0.7rem;
-    }
-
-    .popup-delete {
-      margin-top: 8px;
-      padding: 4px 10px;
-      background-color: #dc2626;
-      color: #fff;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 0.7rem;
-    }
-
-    /* Кастомный маркер */
-    .custom-marker {
-      width: 18px;
-      height: 18px;
-      background-color: var(--accent-light);
-      border: 2px solid var(--bg-card);
-      border-radius: 50%;
-      box-shadow: 0 0 8px var(--shadow-marker);
-      cursor: pointer;
-      transition: background-color 0.3s ease, border-color 0.3s ease;
-    }
-
-    /* ==================== 4. ТЁМНЫЙ ВИД ТАЙЛОВ ==================== */
-    [data-theme="dark"] .leaflet-tile-pane {
-      filter: invert(1) hue-rotate(180deg) brightness(0.95) contrast(0.9);
-    }
+    .leaflet-control-attribution { background: rgba(255, 255, 255, 0.6) !important; color: #1e293b !important; font-weight: 600; font-size: 0.75rem; padding: 4px 10px !important; border-radius: 8px 0 0 0; backdrop-filter: blur(4px); border: 1px solid rgba(0, 0, 0, 0.1); border-right: none; border-bottom: none; }
+    [data-theme="dark"] .leaflet-control-attribution { background: rgba(20, 28, 24, 0.7) !important; color: #e2e8f0 !important; border-color: rgba(255, 255, 255, 0.1); }
 
     /* ==================== 5. МОДАЛЬНОЕ ОКНО ==================== */
-    .modal-overlay {
-      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(0, 0, 0, 0.6);
-      display: none; justify-content: center; align-items: center;
-      z-index: 1000; backdrop-filter: blur(4px);
-    }
+    .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.6); display: none; justify-content: center; align-items: center; z-index: 1000; backdrop-filter: blur(4px); }
     .modal-overlay.active { display: flex; }
-    .modal-window {
-      background: var(--bg-card);
-      border: 1px solid var(--border-color);
-      border-radius: var(--radius-md);
-      padding: 24px;
-      width: 100%;
-      max-width: 420px;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
-      animation: modalFadeIn 0.2s ease-out;
-    }
-    @keyframes modalFadeIn { from { transform: translateY(10px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-    .modal-title { font-size: 1.2rem; font-weight: 600; margin-bottom: 16px; color: var(--text-main); }
+    .modal-window { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 24px; width: 100%; max-width: 420px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
+    .modal-title { font-size: 1.2rem; font-weight: 600; margin-bottom: 16px; }
     .form-group { margin-bottom: 12px; }
     .form-group label { display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 4px; }
-    .form-group input { width: 100%; padding: 10px; background: var(--bg-input); border: 1px solid var(--border-color); border-radius: var(--radius-sm); color: var(--text-main); outline: none; font-family: inherit; }
-    .form-group input:focus { border-color: var(--accent-light); }
+    .form-group input { width: 100%; padding: 10px; background: var(--bg-input); border: 1px solid var(--border-color); border-radius: var(--radius-sm); color: var(--text-main); outline: none; }
     .modal-actions { display: flex; gap: 10px; margin-top: 20px; }
-    .modal-actions button { flex: 1; padding: 10px; border-radius: var(--radius-sm); font-weight: 600; cursor: pointer; border: none; transition: 0.2s; }
+    .modal-actions button { flex: 1; padding: 10px; border-radius: var(--radius-sm); font-weight: 600; cursor: pointer; border: none; }
     .btn-cancel { background: var(--bg-card-hover); color: var(--text-main); border: 1px solid var(--border-color); }
-    .btn-cancel:hover { background: var(--border-color); }
     .btn-save { background: var(--accent-green); color: #fff; }
-    .btn-save:hover { background: var(--accent-green-hover); }
 
-    /* ==================== 6. МОБИЛЬНАЯ ВЕРСИЯ ==================== */
+    /* ==================== 6. ГЕОЛОКАЦИЯ ==================== */
+    .user-marker { width: 18px; height: 18px; background-color: #2563eb; border: 3px solid #fff; border-radius: 50%; box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.35), 0 2px 6px rgba(0,0,0,0.3); position: relative; }
+    .user-marker::after { content: ''; position: absolute; top: 50%; left: 50%; width: 18px; height: 18px; border-radius: 50%; background: rgba(37, 99, 235, 0.5); transform: translate(-50%, -50%); animation: userPulse 2s ease-out infinite; }
+    @keyframes userPulse { 0% { transform: translate(-50%, -50%) scale(1); opacity: 0.6; } 100% { transform: translate(-50%, -50%) scale(2.8); opacity: 0; } }
+    .point-distance { display: inline-block; margin-top: 4px; font-size: 0.72rem; color: #3b82f6; font-weight: 600; }
+
+    /* ==================== 7. СОСТОЯНИЯ ЗАГРУЗКИ / ОШИБКИ ==================== */
+    .state-container { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px 20px; text-align: center; color: var(--text-muted); }
+    .spinner { width: 30px; height: 30px; border: 3px solid var(--border-color); border-top-color: var(--accent-light); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 12px; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .error-text { color: #ef4444; margin-bottom: 12px; font-weight: 600; }
+    .btn-retry { background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); padding: 8px 16px; border-radius: var(--radius-sm); cursor: pointer; transition: 0.2s; }
+    .btn-retry:hover { background: var(--bg-card-hover); }
+
+    #toggleListBtn { display: none; width: 100%; padding: 12px; background-color: var(--bg-card-hover); border: none; border-bottom: 1px solid var(--border-color); color: var(--text-main); font-weight: 600; cursor: pointer; text-align: center; font-size: 0.9rem; transition: background-color 0.2s; }
+    #toggleListBtn:hover { background-color: var(--border-color); }
+
+    /* ==================== 8. МОБИЛЬНАЯ ВЕРСИЯ ==================== */
     @media (max-width: 800px) {
-      .main-layout {
-        flex-direction: column;
-        height: auto;
-        overflow-y: auto;
-      }
-      #sidebar {
-        width: 100%;
-        height: 45vh;
-        border-right: none;
-        border-bottom: 1px solid var(--border-color);
-      }
-      #map {
-        height: 55vh;
-        width: 100%;
-      }
-      .nav {
-        gap: 12px;
-      }
-      .nav__link {
-        font-size: 0.85rem;
-      }
-      .header__container {
-        height: 60px;
-      }
+      .header__container { height: 60px; }
+      .nav { gap: 15px; }
+      .nav__link { font-size: 0.85rem; }
+      
+      .main-layout { height: calc(100vh - 60px); position: relative; display: block; }
+
+      #map { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
+
+      #sidebar { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: transparent; border: none; display: flex; flex-direction: column; pointer-events: none; z-index: 1000; }
+
+      .sidebar-top { pointer-events: auto; background: var(--bg-card); border-radius: 0 0 16px 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); flex-shrink: 0; z-index: 2; }
+
+      .search-box { padding: 10px 14px; }
+      .filters { padding: 10px 14px; flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+      .filters::-webkit-scrollbar { display: none; }
+      .filters button { white-space: nowrap; }
+      .actions { padding: 10px 14px; gap: 8px; }
+      .actions button { padding: 10px 8px; font-size: 0.8rem; }
+
+      #toggleListBtn { display: block; }
+
+      #points-list { pointer-events: auto; background: var(--bg-card); flex: 0 1 auto; max-height: 0; opacity: 0; overflow: hidden; padding: 0; transition: max-height 0.3s ease-in-out, opacity 0.3s ease; border-radius: 0 0 16px 16px; z-index: 1; }
+      #points-list.open { flex: 1; max-height: 100%; opacity: 1; overflow-y: auto; padding: 8px 0; box-shadow: 0 4px 15px rgba(0,0,0,0.3); border-radius: 0; }
+      .point-card { padding: 14px 18px; }
     }
   </style>
 </head>
 
 <body>
 
-  <!-- ШАПКА -->
   <header class="header">
     <div class="container header__container">
       <a href="index.html" class="logo">
-        <span class="logo__icon">
-          <img src="logo.svg" alt="Логотип">
-        </span>
+        <span class="logo__icon"><img src="logo.svg" alt="Логотип"></span>
         <span class="logo__text">ЭкоГомель</span>
       </a>
       <nav class="nav">
-        <a href="index.html" class="nav__link">Главная</a>
+        <a href="index.html" class="nav__link">Поиск</a>
         <a href="map.html" class="nav__link active">Карта</a>
         <a href="about_project.html" class="nav__link">О проекте</a>
-        <button id="theme-toggle" class="theme-toggle" aria-label="Переключить тему">
-          <img src="moon.svg" alt="Луна">
-        </button>
+        <button id="theme-toggle" class="theme-toggle" aria-label="Переключить тему"></button>
       </nav>
     </div>
   </header>
 
-  <!-- ОСНОВНОЙ КОНТЕНТ -->
   <div class="main-layout">
     <aside id="sidebar">
-      <div class="search-box">
-        <input type="text" id="searchInput" placeholder="Поиск по названию или адресу..." />
-      </div>
+      
+      <div class="sidebar-top">
+        <div class="search-box">
+          <input type="text" id="searchInput" placeholder="Поиск пункта или адреса" />
+        </div>
 
-      <div class="filters" id="filtersContainer">
-        <button class="active" data-filter="all">Все</button>
-        <button data-filter="Пластик">Пластик</button>
-        <button data-filter="Стекло">Стекло</button>
-        <button data-filter="Макулатура">Макулатура</button>
-        <button data-filter="Батарейки">Батарейки</button>
-        <button data-filter="Электроника">Электроника</button>
-        <button data-filter="Металлолом">Металлолом</button>
-      </div>
+        <div class="filters" id="filtersContainer">
+          <button class="active" data-filter="all">Все</button>
+          <button data-filter="Пластик">Пластик</button>
+          <button data-filter="Стекло">Стекло</button>
+          <button data-filter="Макулатура">Макулатура</button>
+          <button data-filter="Батарейки">Батарейки</button>
+          <button data-filter="Электроника">Электроника</button>
+          <button data-filter="Металлолом">Металлолом</button>
+        </div>
 
-      <div class="actions">
-        <button id="addModeBtn">➕ Добавить точку</button>
-        <button id="clearAllBtn">🗑 Удалить все</button>
+        <div class="actions">
+          <button id="geoBtn" title="Моё местоположение">📍 Я здесь</button>
+          <button id="nearestBtn" title="Радиус 3 км">🎯 До 3 км</button>
+          <button id="addModeBtn">➕ Добавить</button>
+          <button id="clearAllBtn">🗑 Удалить все</button>
+        </div>
+
+        <button id="toggleListBtn">Показать список пунктов</button>
       </div>
 
       <div id="points-list"></div>
@@ -564,34 +446,31 @@
     </div>
   </div>
 
-  <!-- Leaflet JS -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="api.js"></script>
 
-  <!-- ============ ПЕРЕКЛЮЧАТЕЛЬ ТЕМЫ ============ -->
   <script>
+    /* ============ ПЕРЕКЛЮЧАТЕЛЬ ТЕМЫ ============ */
     (function () {
       const btn = document.getElementById('theme-toggle');
       const saved = localStorage.getItem('theme') || 'dark';
-
       if (saved === 'light') {
         document.documentElement.setAttribute('data-theme', 'light');
-        btn.innerHTML = '<img src="sun.svg" alt="Светлая тема" style="width:20px; height:20px; pointer-events:none;">';
+        btn.innerHTML = '<img src="sun.svg" alt="Светлая тема">';
       } else {
         document.documentElement.setAttribute('data-theme', 'dark');
-        btn.innerHTML = '<img src="moon.svg" alt="Тёмная тема" style="width:20px; height:20px; pointer-events:none;">';
+        btn.innerHTML = '<img src="moon.svg" alt="Тёмная тема">';
       }
-
       btn.addEventListener('click', () => {
         const cur = document.documentElement.getAttribute('data-theme');
         if (cur === 'light') {
           document.documentElement.setAttribute('data-theme', 'dark');
           localStorage.setItem('theme', 'dark');
-          btn.innerHTML = '<img src="moon.svg" alt="Тёмная тема" style="width:20px; height:20px; pointer-events:none;">';
+          btn.innerHTML = '<img src="moon.svg" alt="Тёмная тема">';
         } else {
           document.documentElement.setAttribute('data-theme', 'light');
           localStorage.setItem('theme', 'light');
-          btn.innerHTML = '<img src="sun.svg" alt="Светлая тема" style="width:20px; height:20px; pointer-events:none;">';
+          btn.innerHTML = '<img src="sun.svg" alt="Светлая тема">';
         }
       });
     })();
@@ -599,158 +478,131 @@
 
   <script>
     /* ============================================================
-       1. НАЧАЛЬНЫЕ ДАННЫЕ (18 точек Гомеля)
+       ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ И НАСТРОЙКИ API
        ============================================================ */
-    const INITIAL_POINTS = [
-      { id: 1, name: "УПП «Гомель ВТИ» (БелВТИ)", address: "г. Гомель, ул. Барыкина, 299", latitude: 52.4172, longitude: 30.9168, accepted_types: ["Электроника", "Бытовая техника", "Батарейки", "Ртутные лампы"], working_hours: "Пн-Пт 08:00-20:00, Сб-Вс 08:30-20:00", description: "Крупный официальный пункт приема электрического и электронного оборудования." },
-      { id: 2, name: "ЧТУП «Гомелькоопвторресурсы»", address: "г. Гомель, Речицкое шоссе, 41", latitude: 52.4048, longitude: 30.9332, accepted_types: ["Макулатура", "Стеклобой", "Стеклотара", "Пластик", "Текстиль"], working_hours: "Пн-Пт 08:30-16:30, Сб 08:30-13:30", description: "Стационарный заготовительный пункт." },
-      { id: 3, name: "ЧТУП «Гомелькоопвторресурсы»", address: "г. Гомель, ул. Головацкого, 96", latitude: 52.4503, longitude: 31.0181, accepted_types: ["Макулатура", "Стекло", "Металлолом", "Пластик"], working_hours: "Пн-Пт 08:00-16:00, Вс 08:00-16:00", description: "Пункт заготовки вторичного сырья в Центральном районе." },
-      { id: 4, name: "ЧТУП «Гомелькоопвторресурсы»", address: "г. Гомель, ул. Тельмана, 6", latitude: 52.4347, longitude: 31.0135, accepted_types: ["Макулатура", "Стеклотара", "Пластик"], working_hours: "Пн-Пт 07:00-14:30", description: "Приемно-заготовительный пункт рядом с центром." },
-      { id: 5, name: "ЧТУП «Гомелькоопвторресурсы»", address: "г. Гомель, ул. Царикова, 53", latitude: 52.4414, longitude: 30.9572, accepted_types: ["Макулатура", "Стеклобой", "Пластик PET", "Металлолом"], working_hours: "Пн-Пт 08:30-16:30, Сб 08:30-13:30", description: "Заготовительный киоск в районе Сельмаша." },
-      { id: 6, name: "ЧТУП «Гомелькоопвторресурсы»", address: "г. Гомель, ул. Жемчужная", latitude: 52.3703, longitude: 31.0264, accepted_types: ["Макулатура", "Стеклотара", "Пластик"], working_hours: "Пн-Пт 08:30-16:00, Сб 08:30-13:30", description: "Пункт приема вторсырья в Новобелицком районе." },
-      { id: 7, name: "ЧТУП «Гомелькоопвторресурсы»", address: "г. Гомель, ул. Братьев Лизюковых, 28", latitude: 52.4069, longitude: 30.9419, accepted_types: ["Макулатура", "Стекло", "Пластик"], working_hours: "Пн-Пт 08:30-16:30, Сб 08:30-14:00", description: "Удобная точка приема в Советском районе." },
-      { id: 8, name: "Приемный пункт КУП «Спецкоммунтранс»", address: "г. Гомель, ул. Маневича, 2", latitude: 52.4828, longitude: 30.9997, accepted_types: ["Пластик PET", "Макулатура", "Стекло", "Полимеры"], working_hours: "Пн-Вс 09:00-17:00", description: "Специализированный стационарный пункт." },
-      { id: 9, name: "Главная база КУП «Спецкоммунтранс»", address: "г. Гомель, ул. Аграрная, 1", latitude: 52.4632, longitude: 30.9944, accepted_types: ["Пластик PET", "Макулатура", "Стекло", "Изношенные шины", "Крупногабаритные отходы"], working_hours: "Пн-Чт 08:00-16:50, Пт 08:00-16:00", description: "Центральный офис и заготовительная база." },
-      { id: 10, name: "ОАО «Гомельхимторг»", address: "г. Гомель, ул. Могилевская, 20", latitude: 52.4741, longitude: 30.9782, accepted_types: ["Макулатура", "Стекло", "Полимерные отходы", "Металлолом", "Изношенные шины", "Электроника", "Аккумуляторы"], working_hours: "Пн-Пт 08:00-17:00, Обед 12:00-13:00", description: "Универсальный пункт приема широкого спектра отходов." },
-      { id: 11, name: "Гомельский цех ОАО «Белцветмет»", address: "г. Гомель, ул. Могилевская, 2А", latitude: 52.4639, longitude: 30.9664, accepted_types: ["Металлолом", "Аккумуляторы"], working_hours: "Пн-Чт 08:00-16:00, Пт 08:00-15:00", description: "Специализированное предприятие по приему цветных металлов." },
-      { id: 12, name: "ООО «БелВторОтходы»", address: "г. Гомель, ул. Борисенко, 7/2", latitude: 52.4045, longitude: 30.9061, accepted_types: ["Электроника", "Бытовая техника", "Батарейки"], working_hours: "Пн-Пт 08:30-17:00", description: "Пункт сбора отработанного электронного оборудования." },
-      { id: 13, name: "Приемный пункт стеклотары и макулатуры", address: "г. Гомель, ул. Кожара, 42", latitude: 52.4542, longitude: 31.0028, accepted_types: ["Стеклотара", "Стеклобой", "Макулатура"], working_hours: "Пн-Пт 09:00-16:30, Сб 09:00-14:00", description: "Пункт шаговой доступности в Железнодорожном районе." },
-      { id: 14, name: "Эко-контейнер в «Евроопт» (Хатаевича)", address: "г. Гомель, ул. Хатаевича, 9", latitude: 52.4431, longitude: 31.0165, accepted_types: ["Батарейки", "Ртутные лампы"], working_hours: "Пн-Вс 09:00-23:00", description: "Специальный эко-контейнер для элементов питания и ламп." },
-      { id: 15, name: "Эко-контейнер в «Евроопт» (Ефремова)", address: "г. Гомель, ул. Ефремова, 11-1", latitude: 52.4618, longitude: 30.9658, accepted_types: ["Батарейки", "Ртутные лампы"], working_hours: "Пн-Вс 09:00-22:00", description: "Контейнер для сбора люминесцентных ламп и батареек." },
-      { id: 16, name: "Эко-контейнер в ТЦ «Евроопт» (Владимирова)", address: "г. Гомель, ул. Владимирова, 16", latitude: 52.4211, longitude: 30.9329, accepted_types: ["Батарейки", "Ртутные лампы"], working_hours: "Пн-Вс 09:00-22:00", description: "Эко-бокс для мелких опасных отходов." },
-      { id: 17, name: "Эко-контейнер в «Евроопт» (Свиридова)", address: "г. Гомель, ул. Свиридова, 15-1", latitude: 52.4746, longitude: 31.0255, accepted_types: ["Батарейки", "Ртутные лампы"], working_hours: "Пн-Вс 09:00-22:00", description: "Пункт сбора батареек и ламп в Клёнковском." },
-      { id: 18, name: "Эко-контейнер в ТЦ «МАНДАРИН ПЛАЗА»", address: "г. Гомель, Речицкий проспект, 5В", latitude: 52.4056, longitude: 30.9381, accepted_types: ["Батарейки", "Ртутные лампы"], working_hours: "Пн-Вс 10:00-21:00", description: "Эко-контейнер для ртутьсодержащих ламп и батареек." }
-    ];
+    const NEAREST_RADIUS = 3000; 
+    const API_POINTS_URL = `${API_BASE_URL}/points/`; // Базовый URL из api.js
 
-    /* ============================================================
-       2. КОНФИГУРАЦИЯ
-       ============================================================ */
-    const DATA_SOURCE = 'local';
-    const API_URL = `${API_BASE_URL}/points`;
-    const LS_KEY = 'ecogomel_points';
-
-    /* ============================================================
-       3. РАБОТА С ДАННЫМИ
-       ============================================================ */
-    async function getPoints() {
-      if (DATA_SOURCE === 'api') {
-        try {
-          const res = await fetch(API_URL);
-          return await res.json();
-        } catch (e) {
-          console.error('Ошибка API:', e);
-          return JSON.parse(JSON.stringify(INITIAL_POINTS));
-        }
-      }
-      const saved = localStorage.getItem(LS_KEY);
-      if (saved) return JSON.parse(saved);
-      return JSON.parse(JSON.stringify(INITIAL_POINTS));
-    }
-
-    function savePointsLocal(list) {
-      if (DATA_SOURCE === 'local') {
-        localStorage.setItem(LS_KEY, JSON.stringify(list));
-      }
-    }
-
-    async function apiAddPoint(point) {
-      if (DATA_SOURCE === 'api') {
-        try {
-          const res = await fetch(API_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(point)
-          });
-          return await res.json();
-        } catch (e) {
-          console.error('Ошибка API:', e);
-        }
-      }
-      point.id = Date.now();
-      return point;
-    }
-
-    async function apiDeletePoint(id) {
-      if (DATA_SOURCE === 'api') {
-        try {
-          await fetch(`${API_URL}/${id}`, { method: 'DELETE' });
-        } catch (e) {
-          console.error('Ошибка API:', e);
-        }
-      }
-    }
-
-    /* ============================================================
-       4. СОСТОЯНИЕ
-       ============================================================ */
     let points = [];
     const markerMap = {};
     let activeFilter = 'all';
     let searchText = '';
     let addMode = false;
     let tempLatLng = null;
+    let userMarker = null, userCircle = null, userLatLng = null;
+    let filterByDistance = false, isLocating = false;
+    let isDataLoaded = false;
 
     /* ============================================================
-       5. КАРТА
+       КАРТА
        ============================================================ */
-    const map = L.map('map', { zoomControl: false })
-      .setView([52.4345, 30.9754], 12);
+    const map = L.map('map', { zoomControl: false, attributionControl: false }).setView([52.4345, 30.9754], 12);
+    L.tileLayer('https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', { maxZoom: 19, subdomains: 'abc' }).addTo(map);
+    L.control.attribution({ position: 'bottomright', prefix: '' }).addAttribution('🌿 EcoGomel').addTo(map);
+    L.control.zoom({ position: 'bottomright' }).addTo(map);
 
-    L.tileLayer('https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', {
-      maxZoom: 19,
-      subdomains: 'abc',
-      attribution: '&copy; OpenStreetMap'
-    }).addTo(map);
-
-    L.control.zoom({ position: 'topright' }).addTo(map);
-
-    const greenIcon = L.divIcon({
-      className: '',
-      html: '<div class="custom-marker"></div>',
-      iconSize: [18, 18],
-      iconAnchor: [9, 9],
-      popupAnchor: [0, -10]
-    });
+    const greenIcon = L.divIcon({ className: '', html: '<div class="custom-marker"></div>', iconSize: [18, 18], iconAnchor: [9, 9], popupAnchor: [0, -10] });
+    const userIcon = L.divIcon({ className: '', html: '<div class="user-marker"></div>', iconSize: [18, 18], iconAnchor: [9, 9], popupAnchor: [0, -12] });
 
     /* ============================================================
-       6. МАРКЕРЫ И ФИЛЬТРАЦИЯ
+       1. ПОЛУЧЕНИЕ ДАННЫХ (GET)
        ============================================================ */
-    function addMarker(p) {
-      const marker = L.marker([p.latitude, p.longitude], { icon: greenIcon }).addTo(map);
-      marker.bindPopup(buildPopup(p));
-      marker.on('click', () => highlightCard(p.id));
-      markerMap[p.id] = marker;
+    async function fetchPointsFromAPI() {
+      const listEl = document.getElementById('points-list');
+      const toggleListBtn = document.getElementById('toggleListBtn');
+      
+      listEl.innerHTML = `
+        <div class="state-container">
+          <div class="spinner"></div>
+          <div>Загрузка пунктов...</div>
+        </div>`;
+      toggleListBtn.textContent = 'Загрузка...';
+      isDataLoaded = false;
+
+      try {
+        const data = await EcoAPI.getPoints();
+        points = data.results ? data.results : data; 
+        isDataLoaded = true;
+
+        Object.values(markerMap).forEach(m => map.removeLayer(m));
+        Object.keys(markerMap).forEach(k => delete markerMap[k]);
+
+        points.forEach(p => addMarker(p));
+        renderList();
+        syncMarkers();
+
+      } catch (error) {
+        console.error('Ошибка загрузки точек:', error);
+        listEl.innerHTML = `
+          <div class="state-container">
+            <div class="error-text">Не удалось загрузить данные</div>
+            <div style="font-size: 0.8rem; margin-bottom: 16px;">Убедитесь, что сервер Django запущен.</div>
+            <button class="btn-retry" onclick="fetchPointsFromAPI()">Повторить попытку</button>
+          </div>`;
+        toggleListBtn.textContent = 'Ошибка загрузки';
+      }
     }
 
-    function buildPopup(p) {
-      const tags = (p.accepted_types || [])
-        .map(t => `<span>${t}</span>`).join('');
-
-      return `
-      <div style="min-width:220px">
-        <div class="popup-title">${p.name}</div>
-        <div class="popup-address">${p.address}</div>
-        <div class="popup-tags">${tags}</div>
-        <div class="popup-hours">${p.working_hours}</div>
-        <div class="popup-desc">${p.description || ''}</div>
-        <button class="popup-delete" onclick="deletePoint(${p.id})">
-          Удалить точку
-        </button>
-      </div>`;
+    /* ============================================================
+       2. ДОБАВЛЕНИЕ И УДАЛЕНИЕ (POST / DELETE)
+       ============================================================ */
+    async function addPointToAPI(newPoint) {
+      try {
+        const response = await fetch(API_POINTS_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(newPoint)
+        });
+        if (!response.ok) throw new Error('Ошибка сервера');
+        const savedPoint = await response.json();
+        
+        points.push(savedPoint);
+        addMarker(savedPoint);
+        renderList();
+        syncMarkers();
+        return true;
+      } catch (error) {
+        alert('Не удалось сохранить точку: ' + error.message);
+        return false;
+      }
     }
 
+    async function deletePointFromAPI(id) {
+      try {
+        const response = await fetch(`${API_POINTS_URL}${id}/`, { method: 'DELETE' });
+        if (!response.ok) throw new Error('Ошибка сервера');
+        
+        points = points.filter(p => p.id !== id);
+        if (markerMap[id]) {
+          map.removeLayer(markerMap[id]);
+          delete markerMap[id];
+        }
+        renderList();
+        syncMarkers();
+      } catch (error) {
+        alert('Не удалось удалить точку: ' + error.message);
+      }
+    }
+
+    // Функция для вызова из попапа маркера
+    window.deletePoint = async function(id) {
+      if (!confirm('Вы уверены, что хотите удалить эту точку?')) return;
+      await deletePointFromAPI(id);
+    };
+
+    /* ============================================================
+       3. ОТРИСОВКА И ФИЛЬТРАЦИЯ
+       ============================================================ */
     function syncMarkers() {
       points.forEach(p => {
-        const matchType = activeFilter === 'all' ||
-          (p.accepted_types || []).some(t => t.toLowerCase().includes(activeFilter.toLowerCase()));
-        
-        const matchText = searchText === '' ||
-          p.name.toLowerCase().includes(searchText) ||
-          p.address.toLowerCase().includes(searchText);
+        const types = p.accepted_types || [];
+        const matchType = activeFilter === 'all' || types.some(t => t.toLowerCase().includes(activeFilter.toLowerCase()));
+        const matchText = searchText === '' || p.name.toLowerCase().includes(searchText) || p.address.toLowerCase().includes(searchText);
+        const matchDistance = !filterByDistance || (p._distance && p._distance <= NEAREST_RADIUS);
 
         const marker = markerMap[p.id];
         if (marker) {
-          if (matchType && matchText) {
+          if (matchType && matchText && matchDistance) {
             if (!map.hasLayer(marker)) map.addLayer(marker);
           } else {
             if (map.hasLayer(marker)) map.removeLayer(marker);
@@ -759,70 +611,104 @@
       });
     }
 
-    /* ============================================================
-       7. СПИСОК ТОЧЕК
-       ============================================================ */
     const listEl = document.getElementById('points-list');
+    const toggleListBtn = document.getElementById('toggleListBtn');
+
+    function formatDistance(meters) { return meters < 1000 ? Math.round(meters) + ' м' : (meters / 1000).toFixed(1) + ' км'; }
 
     function renderList() {
-      const filtered = points.filter(p => {
-        const matchType = activeFilter === 'all' ||
-          (p.accepted_types || []).some(t =>
-            t.toLowerCase().includes(activeFilter.toLowerCase()));
+      if (!isDataLoaded) return;
 
-        const matchText = searchText === '' ||
-          p.name.toLowerCase().includes(searchText) ||
-          p.address.toLowerCase().includes(searchText);
-
-        return matchType && matchText;
+      let filtered = points.filter(p => {
+        const types = p.accepted_types || [];
+        const matchType = activeFilter === 'all' || types.some(t => t.toLowerCase().includes(activeFilter.toLowerCase()));
+        const matchText = searchText === '' || p.name.toLowerCase().includes(searchText) || p.address.toLowerCase().includes(searchText);
+        const matchDistance = !filterByDistance || (p._distance && p._distance <= NEAREST_RADIUS);
+        return matchType && matchText && matchDistance;
       });
+
+      if (userLatLng) {
+        filtered.sort((a, b) => {
+          const distA = typeof a._distance === 'number' ? a._distance : Infinity;
+          const distB = typeof b._distance === 'number' ? b._distance : Infinity;
+          return distA - distB;
+        });
+      } else {
+        filtered.sort((a, b) => a.name.localeCompare(b.name));
+      }
 
       listEl.innerHTML = '';
 
       if (filtered.length === 0) {
-        listEl.innerHTML =
-          '<div style="padding:20px;color:var(--text-muted);text-align:center">' +
-          'Ничего не найдено</div>';
+        listEl.innerHTML = `
+          <div class="state-container">
+            <div style="font-size: 2rem; margin-bottom: 10px;">🔍</div>
+            <div>По вашему запросу ничего не найдено.</div>
+          </div>`;
+        toggleListBtn.textContent = 'Ничего не найдено';
         return;
       }
+
+      toggleListBtn.textContent = `Показать список пунктов (${filtered.length})`;
 
       filtered.forEach(p => {
         const card = document.createElement('div');
         card.className = 'point-card';
         card.dataset.id = p.id;
-
-        const tags = (p.accepted_types || []).slice(0, 4)
-          .map(t => `<span>${t}</span>`).join('');
+        const tags = (p.accepted_types || []).slice(0, 4).map(t => `<span>${t}</span>`).join('');
+        const distanceHtml = (typeof p._distance === 'number') ? `<div class="point-distance">📏 ${formatDistance(p._distance)} от вас</div>` : '';
 
         card.innerHTML = `
         <div class="point-name">${p.name}</div>
         <div class="point-address">${p.address}</div>
         <div class="point-tags">${tags}</div>
-        <div class="point-hours">${p.working_hours}</div>`;
+        <div class="point-hours">${p.working_hours}</div>
+        ${distanceHtml}`;
 
         card.addEventListener('click', () => {
-          map.setView([p.latitude, p.longitude], 15);
-          markerMap[p.id].openPopup();
+          if (markerMap[p.id]) {
+            markerMap[p.id].openPopup();
+            map.setView([p.latitude, p.longitude], 16);
+          }
           highlightCard(p.id);
+          if (window.innerWidth <= 800) {
+            listEl.classList.remove('open');
+            toggleListBtn.textContent = `Показать список пунктов (${filtered.length})`;
+          }
         });
-
         listEl.appendChild(card);
       });
     }
 
-    function highlightCard(id) {
-      document.querySelectorAll('.point-card')
-        .forEach(c => c.classList.remove('active'));
+    function addMarker(p) {
+      const marker = L.marker([parseFloat(p.latitude), parseFloat(p.longitude)], { icon: greenIcon }).addTo(map);
+      marker.bindPopup(buildPopup(p));
+      marker.on('click', () => highlightCard(p.id));
+      markerMap[p.id] = marker;
+    }
 
+    function buildPopup(p) {
+      const tags = (p.accepted_types || []).map(t => `<span>${t}</span>`).join('');
+      const distLine = (typeof p._distance === 'number') ? `<div style="font-size:0.72rem;color:#3b82f6;font-weight:600;margin-top:6px;">📏 ${formatDistance(p._distance)} от вас</div>` : '';
+      return `
+      <div style="min-width:220px">
+        <div class="popup-title">${p.name}</div>
+        <div class="popup-address">${p.address}</div>
+        <div class="popup-tags">${tags}</div>
+        <div class="popup-hours">${p.working_hours}</div>
+        ${distLine}
+        <button class="popup-delete" onclick="deletePoint(${p.id})">Удалить точку</button>
+      </div>`;
+    }
+
+    function highlightCard(id) {
+      document.querySelectorAll('.point-card').forEach(c => c.classList.remove('active'));
       const card = document.querySelector(`.point-card[data-id="${id}"]`);
-      if (card) {
-        card.classList.add('active');
-        card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-      }
+      if (card) card.classList.add('active');
     }
 
     /* ============================================================
-       8. МОДАЛЬНОЕ ОКНО (ДОБАВЛЕНИЕ)
+       4. ЛОГИКА МОДАЛЬНОГО ОКНА (ДОБАВЛЕНИЕ)
        ============================================================ */
     const addModal = document.getElementById('addModal');
     const addModeBtn = document.getElementById('addModeBtn');
@@ -830,14 +716,13 @@
     addModeBtn.addEventListener('click', function () {
       addMode = !addMode;
       this.classList.toggle('active', addMode);
-      this.textContent = addMode ? '📍 Кликните на карту' : '➕ Добавить точку';
+      this.textContent = addMode ? '📍 Кликните на карту' : '➕ Добавить';
     });
 
     map.on('click', function (e) {
       if (!addMode) return;
       tempLatLng = e.latlng;
       addModal.classList.add('active');
-      
       document.getElementById('m_name').value = '';
       document.getElementById('m_address').value = '';
       document.getElementById('m_types').value = '';
@@ -848,7 +733,7 @@
       addModal.classList.remove('active');
       addMode = false;
       addModeBtn.classList.remove('active');
-      addModeBtn.textContent = '➕ Добавить точку';
+      addModeBtn.textContent = '➕ Добавить';
     });
 
     document.getElementById('btnSaveModal').addEventListener('click', async () => {
@@ -865,64 +750,59 @@
         description: ''
       };
 
-      const saved = await apiAddPoint(newPoint);
-      points.push(saved);
-      savePointsLocal(points);
-      
-      addMarker(saved);
-      syncMarkers();
-      renderList();
-
-      addModal.classList.remove('active');
-      addMode = false;
-      addModeBtn.classList.remove('active');
-      addModeBtn.textContent = '➕ Добавить точку';
-    });
-
-    /* ============================================================
-       9. УДАЛЕНИЕ ТОЧКИ
-       ============================================================ */
-    async function deletePoint(id) {
-      if (!confirm('Удалить эту точку?')) return;
-
-      if (markerMap[id]) {
-        map.removeLayer(markerMap[id]);
-        delete markerMap[id];
+      const success = await addPointToAPI(newPoint);
+      if (success) {
+        addModal.classList.remove('active');
+        addMode = false;
+        addModeBtn.classList.remove('active');
+        addModeBtn.textContent = '➕ Добавить';
       }
-
-      await apiDeletePoint(id);
-
-      points = points.filter(p => p.id !== id);
-      savePointsLocal(points);
-      renderList();
-      syncMarkers();
-    }
-
-    window.deletePoint = deletePoint;
-
-    document.getElementById('clearAllBtn').addEventListener('click', async function () {
-      if (!confirm('Удалить ВСЕ точки с карты?')) return;
-
-      for (const p of points) await apiDeletePoint(p.id);
-
-      Object.values(markerMap).forEach(m => map.removeLayer(m));
-      Object.keys(markerMap).forEach(k => delete markerMap[k]);
-
-      points = [];
-      savePointsLocal(points);
-      renderList();
     });
 
     /* ============================================================
-       10. ФИЛЬТРЫ И ПОИСК
+       5. УДАЛЕНИЕ ВСЕХ ТОЧЕК
+       ============================================================ */
+    document.getElementById('clearAllBtn').addEventListener('click', async function () {
+      if (!confirm('Вы уверены, что хотите удалить ВСЕ точки с карты? Это действие нельзя отменить.')) return;
+      
+      const btn = this;
+      btn.textContent = 'Удаление...';
+      btn.disabled = true;
+
+      try {
+        // Удаляем каждую точку через API
+        for (const p of points) {
+          await fetch(`${API_POINTS_URL}${p.id}/`, { method: 'DELETE' });
+        }
+        points = [];
+        Object.values(markerMap).forEach(m => map.removeLayer(m));
+        Object.keys(markerMap).forEach(k => delete markerMap[k]);
+        renderList();
+        syncMarkers();
+      } catch (error) {
+        alert('Ошибка при удалении всех точек: ' + error.message);
+      } finally {
+        btn.textContent = '🗑 Удалить все';
+        btn.disabled = false;
+      }
+    });
+
+    /* ============================================================
+       6. ФИЛЬТРЫ И ПОИСК
        ============================================================ */
     document.querySelectorAll('#filtersContainer button').forEach(btn => {
       btn.addEventListener('click', () => {
-        document.querySelectorAll('#filtersContainer button')
-          .forEach(b => b.classList.remove('active'));
-
-        btn.classList.add('active');
-        activeFilter = btn.dataset.filter;
+        const filter = btn.dataset.filter;
+        
+        if (activeFilter === filter && filter !== 'all') {
+          activeFilter = 'all';
+          document.querySelectorAll('#filtersContainer button').forEach(b => b.classList.remove('active'));
+          document.querySelector('#filtersContainer button[data-filter="all"]').classList.add('active');
+        } else {
+          activeFilter = filter;
+          document.querySelectorAll('#filtersContainer button').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+        }
         renderList();
         syncMarkers();
       });
@@ -934,15 +814,91 @@
       syncMarkers();
     });
 
+    toggleListBtn.addEventListener('click', () => {
+      listEl.classList.toggle('open');
+    });
+
     /* ============================================================
-       11. ЗАПУСК
+       7. ГЕОЛОКАЦИЯ
        ============================================================ */
-    (async function init() {
-      points = await getPoints();
-      points.forEach(p => addMarker(p));
+    const geoBtn = document.getElementById('geoBtn');
+    const nearestBtn = document.getElementById('nearestBtn');
+
+    function requestLocation() {
+      if (isLocating || userLatLng) return; 
+      isLocating = true;
+      geoBtn.classList.add('loading');
+      geoBtn.textContent = '⏳ Ищу...';
+      map.locate({ watch: true, setView: false, enableHighAccuracy: true, maximumAge: 1000, timeout: 10000 });
+    }
+
+    geoBtn.addEventListener('click', () => {
+      if (userLatLng) { 
+        map.panTo(userLatLng); 
+        if (userMarker) userMarker.openPopup();
+      } else if (!isLocating) { 
+        requestLocation(); 
+      }
+    });
+
+    nearestBtn.addEventListener('click', () => {
+      filterByDistance = !filterByDistance;
+      nearestBtn.classList.toggle('active', filterByDistance);
+      if (filterByDistance && !userLatLng && !isLocating) { 
+        requestLocation(); 
+      } else {
+        renderList();
+        syncMarkers();
+      }
+    });
+
+    map.on('locationfound', function (e) {
+      isLocating = false; 
+      geoBtn.classList.remove('loading');
+      geoBtn.textContent = '📍 Я здесь';
+      userLatLng = e.latlng;
+
+      map.panTo(e.latlng);
+
+      if (!userMarker) {
+        userMarker = L.marker(e.latlng, { icon: userIcon, zIndexOffset: 1000 }).addTo(map);
+        userCircle = L.circle(e.latlng, { radius: e.accuracy, color: '#2563eb', fillColor: '#3b82f6', fillOpacity: 0.12, weight: 1 }).addTo(map);
+      } else {
+        userMarker.setLatLng(e.latlng);
+        userCircle.setLatLng(e.latlng);
+        userCircle.setRadius(e.accuracy);
+      }
+
+      points.forEach(p => { 
+        p._distance = map.distance(e.latlng, [parseFloat(p.latitude), parseFloat(p.longitude)]); 
+      });
+      
+      points.forEach(p => { 
+        if (markerMap[p.id]) markerMap[p.id].setPopupContent(buildPopup(p)); 
+      });
+
       renderList();
+      syncMarkers();
+    });
+
+    map.on('locationerror', function (e) {
+      isLocating = false; 
+      geoBtn.classList.remove('loading');
+      geoBtn.textContent = '📍 Я здесь';
+      if (filterByDistance) { 
+        filterByDistance = false; 
+        nearestBtn.classList.remove('active'); 
+        renderList(); 
+        syncMarkers();
+      }
+    });
+
+    /* ============================================================
+       8. ЗАПУСК
+       ============================================================ */
+    (function init() {
+      fetchPointsFromAPI(); 
     })();
   </script>
 </body>
-
 </html>
