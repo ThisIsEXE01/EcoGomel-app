@@ -108,49 +108,26 @@
       <!-- Боковая панель с пунктами приема -->
       <aside class="sidebar">
         <div class="map-preview">
-          <!-- БЛОК МИНИ-КАРТЫ (вставлен вместо плейсхолдера) -->
+          <!-- БЛОК МИНИ-КАРТЫ -->
           <div id="miniMap" style="height: 180px; width: 100%; border-bottom: 1px solid var(--border-color); z-index: 1;"></div>
           
           <div class="map-preview__info">
-            <p>Найдены 3 пункта приема поблизости</p>
+            <p id="mapInfoText">Определяем ваше местоположение...</p>
             <a href="map.html" class="btn btn--outline" style="display: block; text-align: center; text-decoration: none;">Показать все на карте</a>
           </div>
         </div>
 
         <div class="points-list">
           <h4>Ближайшие пункты</h4>
-
-          <div class="point-card">
-            <div class="point-card__header">
-              <h5>Пункт сбора ЭкоПатруль</h5>
-              <span class="point-card__dist">1.2 км</span>
-            </div>
-            <p class="point-card__address">ул. Ленина, д. 45</p>
-            <div class="point-card__tags">
-              <span class="mini-tag">Опасные отходы</span>
-              <span class="mini-tag">Батарейки</span>
-            </div>
-            <div class="point-card__footer">
-              <span>09:00 - 21:00</span>
-              <span>+7 (495) 123-45-67</span>
-            </div>
+          
+          <!-- Плашка с предложением включить геолокацию -->
+          <div id="geoWarning" style="display: none; padding: 15px; background: var(--bg-card-hover); border: 1px dashed var(--accent-green); border-radius: var(--radius-sm); margin-bottom: 12px; text-align: center;">
+            <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 12px;">Чтобы увидеть ближайшие пункты списком, включите геолокацию. Пока что они показаны на карте.</p>
+            <button id="enableGeoBtn" class="btn btn--primary" style="width: 100%; font-size: 0.85rem; padding: 8px;">📍 Включить геолокацию</button>
           </div>
 
-          <div class="point-card">
-            <div class="point-card__header">
-              <h5>ВторТехЭко</h5>
-              <span class="point-card__dist">2.4 км</span>
-            </div>
-            <p class="point-card__address">Проспект Мира, д. 120, стр. 2</p>
-            <div class="point-card__tags">
-              <span class="mini-tag">Опасные отходы</span>
-              <span class="mini-tag">Металл</span>
-            </div>
-            <div class="point-card__footer">
-              <span>Круглосуточно</span>
-              <span>+7 (495) 987-65-43</span>
-            </div>
-          </div>
+          <!-- Сюда будут загружаться карточки (при включенной геолокации) -->
+          <div id="nearbyPointsContainer"></div>
         </div>
       </aside>
     </section>
@@ -171,53 +148,238 @@
     </div>
   </footer>
 
-  <!-- Подключение скриптов Leaflet для карты -->
+  <!-- Подключение скриптов Leaflet -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="api.js"></script>
   
-  <!-- Скрипт инициализации мини-карты -->
+  <!-- Скрипт инициализации мини-карты и геолокации -->
   <script>
     document.addEventListener('DOMContentLoaded', () => {
-      const mapContainer = document.getElementById('miniMap');
-      if (mapContainer) {
-        // Инициализация карты (центр - Гомель)
-        const map = L.map('miniMap', {
-          zoomControl: false,
-          scrollWheelZoom: false,
-          dragging: true
-        }).setView([52.4345, 30.9754], 11);
+      // === 1. ИНИЦИАЛИЗАЦИЯ КАРТЫ ===
+      const map = L.map('miniMap', {
+        zoomControl: false,
+        scrollWheelZoom: false,
+        dragging: true,
+        attributionControl: false 
+      }).setView([52.4345, 30.9754], 11); // Изначально центр - Гомель
 
-        // Загрузка тайлов (светлая тема OpenStreetMap)
-        L.tileLayer('https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', {
-          maxZoom: 19,
-          attribution: '&copy; OpenStreetMap'
-        }).addTo(map);
+      L.tileLayer('https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', {
+        maxZoom: 19
+      }).addTo(map);
 
-        // Кастомная зеленая точка
-        const greenIcon = L.divIcon({
-          className: '',
-          html: '<div style="width: 14px; height: 14px; background-color: #25d366; border: 2px solid #fff; border-radius: 50%; box-shadow: 0 0 5px rgba(37,211,102,0.8);"></div>',
-          iconSize: [14, 14],
-          iconAnchor: [7, 7]
+      L.control.attribution({ position: 'bottomright', prefix: '' })
+        .addAttribution('🌿 EcoGomel')
+        .addTo(map);
+
+      // Иконки
+      const greenIcon = L.divIcon({
+        className: '',
+        html: '<div style="width: 14px; height: 14px; background-color: #25d366; border: 2px solid #fff; border-radius: 50%; box-shadow: 0 0 5px rgba(37,211,102,0.8);"></div>',
+        iconSize: [14, 14], iconAnchor: [7, 7]
+      });
+
+      const userIcon = L.divIcon({
+        className: '',
+        html: '<div style="width: 14px; height: 14px; background-color: #2563eb; border: 2px solid #fff; border-radius: 50%; box-shadow: 0 0 5px rgba(37,99,235,0.8);"></div>',
+        iconSize: [14, 14], iconAnchor: [7, 7]
+      });
+
+      // Переменные
+      let allPoints = [];
+      let mapMarkers = [];
+      const NEAREST_RADIUS = 3000; // 3 км
+      const container = document.getElementById('nearbyPointsContainer');
+      const mapInfoText = document.getElementById('mapInfoText');
+      const geoWarning = document.getElementById('geoWarning');
+
+      // === 2. ЗАГРУЗКА ТОЧЕК С СЕРВЕРА ===
+      async function loadPoints() {
+        try {
+          const data = await EcoAPI.getPoints();
+          allPoints = data.results ? data.results : data;
+          requestLocation();
+        } catch (error) {
+          console.error('Ошибка загрузки точек:', error);
+          container.innerHTML = '<p style="color: #ef4444;">Не удалось загрузить данные.</p>';
+          mapInfoText.textContent = 'Ошибка загрузки';
+        }
+      }
+
+      // === 3. ГЕОЛОКАЦИЯ ===
+      function requestLocation() {
+        if (!navigator.geolocation) {
+          handleLocationError();
+          return;
+        }
+
+        mapInfoText.textContent = "Ищем ваше местоположение...";
+
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            const userLat = position.coords.latitude;
+            const userLng = position.coords.longitude;
+            geoWarning.style.display = 'none'; // Прячем плашку
+            processPoints(userLat, userLng);
+          },
+          (error) => {
+            console.warn("Геолокация недоступна:", error);
+            handleLocationError();
+          },
+          { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
+        );
+      }
+
+      // Если локация выключена, показываем ВСЕ точки на карте, а список скрываем
+      function handleLocationError() {
+        mapInfoText.textContent = "Показаны все пункты приема на карте";
+        geoWarning.style.display = 'block'; // Показываем плашку с кнопкой включения
+
+        // Очищаем список, чтобы он не занимал место
+        container.innerHTML = '';
+
+        // Ставим карту на центр города
+        map.setView([52.4345, 30.9754], 11);
+
+        // Берем ВСЕ точки из базы
+        let fallbackPoints = [...allPoints];
+        
+        // Сортируем по алфавиту для красоты
+        fallbackPoints.sort((a, b) => a.name.localeCompare(b.name));
+        
+        // Рисуем маркеры (без синей точки пользователя)
+        drawMarkers(fallbackPoints, null);
+      }
+
+      // Обработчик кнопки "Включить геолокацию"
+      document.getElementById('enableGeoBtn').addEventListener('click', () => {
+        geoWarning.style.display = 'none'; // Прячем плашку пока идет запрос
+        container.innerHTML = '<p style="color: var(--text-muted); font-size: 0.9rem; text-align:center;">Запрос координат...</p>';
+        requestLocation();
+      });
+
+      // === 4. ОБРАБОТКА, КОГДА ГЕОЛОКАЦИЯ ЕСТЬ ===
+      function processPoints(userLat, userLng) {
+        if (!allPoints || allPoints.length === 0) {
+          container.innerHTML = '<p style="color: var(--text-muted);">Пункты не найдены.</p>';
+          return;
+        }
+
+        const userLatLng = L.latLng(userLat, userLng);
+        map.setView(userLatLng, 13);
+
+        // Считаем расстояния
+        allPoints.forEach(p => {
+          p._distance = map.distance(userLatLng, [parseFloat(p.latitude), parseFloat(p.longitude)]);
         });
 
-        // 3 точки для примера (как написано в тексте)
-        const points = [
-          { name: "Гомель ВТИ", lat: 52.4172, lng: 30.9168 },
-          { name: "Гомелькоопвторресурсы", lat: 52.4503, lng: 31.0181 },
-          { name: "Спецкоммунтранс", lat: 52.4828, lng: 30.9997 }
-        ];
+        // Фильтруем по 3 км
+        let nearby = allPoints.filter(p => p._distance <= NEAREST_RADIUS);
+        nearby.sort((a, b) => a._distance - b._distance);
 
-        // Добавление маркеров на карту
-        points.forEach(p => {
-          L.marker([p.lat, p.lng], { icon: greenIcon })
-            .addTo(map)
-            .bindPopup(`<b>${p.name}</b>`);
+        if (nearby.length === 0) {
+          nearby = allPoints.sort((a, b) => a._distance - b._distance).slice(0, 3);
+          mapInfoText.innerHTML = `В радиусе 3 км пусто. Ближайшие:`;
+        } else {
+          mapInfoText.innerHTML = `Найдено <b>${nearby.length}</b> пунктов поблизости`;
+        }
+
+        // Рисуем маркеры (с синей точкой пользователя)
+        drawMarkers(nearby, userLatLng);
+        
+        // Рисуем список с расстояниями
+        renderList(nearby);
+      }
+
+      // === 5. ФУНКЦИЯ ОТРИСОВКИ МАРКЕРОВ НА КАРТЕ ===
+      function drawMarkers(pointsArray, userLatLng) {
+        mapMarkers.forEach(m => map.removeLayer(m));
+        mapMarkers = [];
+
+        if (userLatLng) {
+          const userMarker = L.marker(userLatLng, { icon: userIcon, zIndexOffset: 1000 }).addTo(map);
+          mapMarkers.push(userMarker);
+        }
+
+        pointsArray.forEach(p => {
+          const marker = L.marker([parseFloat(p.latitude), parseFloat(p.longitude)], { icon: greenIcon }).addTo(map);
+          mapMarkers.push(marker);
         });
       }
+
+      // === 6. ФУНКЦИЯ ОТРИСОВКИ СПИСКА (С РАЗВОРОТОМ И СВОРАЧИВАНИЕМ) ===
+      function renderList(pointsArray) {
+        container.innerHTML = '';
+        let isExpanded = false;
+        const limit = 1; // Показываем изначально ТОЛЬКО 1 точку
+
+        function renderItems() {
+          container.innerHTML = '';
+          
+          // Если раскрыто — показываем все, иначе только 1
+          const pointsToRender = isExpanded ? pointsArray : pointsArray.slice(0, limit);
+
+          pointsToRender.forEach(p => {
+            const distText = p._distance < 1000 
+              ? Math.round(p._distance) + ' м' 
+              : (p._distance / 1000).toFixed(1) + ' км';
+
+            const tags = (p.accepted_types || []).slice(0, 2).map(t => `<span class="mini-tag">${t}</span>`).join('');
+
+            const cardHTML = `
+              <div class="point-card">
+                <div class="point-card__header">
+                  <h5>${p.name}</h5>
+                  <span class="point-card__dist">${distText}</span>
+                </div>
+                <p class="point-card__address">${p.address}</p>
+                <div class="point-card__tags">${tags}</div>
+                <div class="point-card__footer">
+                  <span>${p.working_hours}</span>
+                </div>
+              </div>
+            `;
+            container.insertAdjacentHTML('beforeend', cardHTML);
+          });
+
+          // Логика кнопок
+          if (!isExpanded && pointsArray.length > limit) {
+            // Если свернут и точек больше лимита — показываем "Показать все"
+            const btnHTML = `
+              <button id="showAllBtn" class="btn btn--outline" style="width: 100%; margin-top: 8px; font-size: 0.85rem;">
+                Показать все (${pointsArray.length})
+              </button>
+            `;
+            container.insertAdjacentHTML('beforeend', btnHTML);
+
+            document.getElementById('showAllBtn').addEventListener('click', () => {
+              isExpanded = true;
+              renderItems();
+            });
+          } else if (isExpanded) {
+            // Если развернут — показываем кнопку "Свернуть"
+            const btnHTML = `
+              <button id="collapseBtn" class="btn btn--outline" style="width: 100%; margin-top: 8px; font-size: 0.85rem;">
+                Свернуть
+              </button>
+            `;
+            container.insertAdjacentHTML('beforeend', btnHTML);
+
+            document.getElementById('collapseBtn').addEventListener('click', () => {
+              isExpanded = false;
+              renderItems();
+            });
+          }
+        }
+
+        renderItems();
+      }
+
+      // === ЗАПУСК ===
+      loadPoints();
     });
   </script>
 
-  <script src="api.js"></script>
+  <!-- Скрипт для отрисовки отходов (категорий и тегов) -->
   <script>
     const CATEGORY_CARDS = [
       { category: 'Пластик', icon: 'plastic.svg' },
@@ -228,57 +390,34 @@
       { category: 'Опасные отходы', icon: 'battery.svg' },
     ];
 
-    // Ключ — первый токен кода из БД: "01 PET" -> "01", "PAP 20-22" -> "PAP".
     const CODE_ICONS = {
-      '01': 'plastic_01.svg',
-      '02': 'plastic_02.svg',
-      '03': 'plastic_03.svg',
-      '04': 'plastic_04.svg',
-      '05': 'plastic_05.svg',
-      '06': 'plastic_06.svg',
-      '07': 'plastic_07.svg',
-      'PAP': 'paper_20.svg',
-      '84': 'paper_84.svg',
-      'GL': 'glass_70.svg',
-      'FE': 'metall_40.svg',
-      'ALU': 'alu_41.svg',
+      '01': 'plastic_01.svg', '02': 'plastic_02.svg', '03': 'plastic_03.svg',
+      '04': 'plastic_04.svg', '05': 'plastic_05.svg', '06': 'plastic_06.svg',
+      '07': 'plastic_07.svg', 'PAP': 'paper_20.svg', '84': 'paper_84.svg',
+      'GL': 'glass_70.svg', 'FE': 'metall_40.svg', 'ALU': 'alu_41.svg',
     };
 
     function escapeHtml(value) {
-      return String(value ?? '')
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#39;');
+      return String(value ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
     }
 
     function wasteCountLabel(count) {
       const mod10 = count % 10;
       const mod100 = count % 100;
       let word = 'видов';
-
-      if (mod10 === 1 && mod100 !== 11) {
-        word = 'вид';
-      } else if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) {
-        word = 'вида';
-      }
-
+      if (mod10 === 1 && mod100 !== 11) word = 'вид';
+      else if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) word = 'вида';
       return `${count} ${word} отходов`;
     }
 
     function renderCategoryCards(waste) {
       const container = document.getElementById('categoriesGrid');
       if (!container) return;
-
       container.innerHTML = CATEGORY_CARDS.map(({ category, icon }) => {
         const count = waste.filter((item) => item.category === category).length;
-
         return `
           <a class="card" href="waste.html?category=${encodeURIComponent(category)}" data-category="${category}">
-            <div class="card__icon">
-              <img src="${icon}" alt="${category}">
-            </div>
+            <div class="card__icon"><img src="${icon}" alt="${category}"></div>
             <h3 class="card__title">${category}</h3>
             <span class="card__count">${wasteCountLabel(count)}</span>
           </a>
@@ -289,21 +428,16 @@
     function renderCodeTags(waste) {
       const container = document.getElementById('tagsGrid');
       if (!container) return;
-
-      container.innerHTML = waste
-        .filter((item) => item.code)
-        .map((item) => {
-          const icon = CODE_ICONS[item.code.split(' ')[0]];
-
-          return `
-            <a class="tag" href="waste.html?id=${item.id}">
-              ${icon ? `<img src="${icon}" alt="" class="tag__icon">` : ''}
-              <b>${escapeHtml(item.code)}</b>
-              <span>${escapeHtml(item.category)}</span>
-            </a>
-          `;
-        })
-        .join('');
+      container.innerHTML = waste.filter((item) => item.code).map((item) => {
+        const icon = CODE_ICONS[item.code.split(' ')[0]];
+        return `
+          <a class="tag" href="waste.html?id=${item.id}">
+            ${icon ? `<img src="${icon}" alt="" class="tag__icon">` : ''}
+            <b>${escapeHtml(item.code)}</b>
+            <span>${escapeHtml(item.category)}</span>
+          </a>
+        `;
+      }).join('');
     }
 
     async function renderWasteSections() {
@@ -313,7 +447,6 @@
         renderCodeTags(waste);
       } catch (error) {
         console.error('Не удалось загрузить отходы:', error);
-
         const message = '<p>Не удалось загрузить данные. Проверьте, запущен ли сервер.</p>';
         document.getElementById('categoriesGrid').innerHTML = message;
         document.getElementById('tagsGrid').innerHTML = message;
