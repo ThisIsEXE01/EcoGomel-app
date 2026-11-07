@@ -3,6 +3,11 @@
 
 <head>
   <meta charset="UTF-8">
+  <script>
+    // Мгновенная установка темы из localStorage до отрисовки страницы
+    const savedTheme = localStorage.getItem('theme') || 'dark';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+  </script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ЭкоГомель — О проекте</title>
   <link rel="stylesheet" href="style.css">
@@ -16,7 +21,7 @@
     <div class="container header__container">
       <a href="index.html" class="logo">
         <span class="logo__icon">
-          <img src="logo.svg" alt="Логотип">
+          <img src="logo.png" alt="Логотип">
         </span>
         <span class="logo__text">ЭкоГомель</span>
       </a>
@@ -25,7 +30,7 @@
         <a href="map.html" class="nav__link">Карта</a>
         <a href="about_project.html" class="nav__link active">О проекте</a>
         <button id="theme-toggle" class="theme-toggle" aria-label="Переключить тему">
-          <img src="moon.svg" alt="Луна">
+          <img src="moon.png" alt="Луна">
         </button>
       </nav>
     </div>
