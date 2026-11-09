@@ -4,3 +4,11 @@ bug№2 Error regarding map points and input windows
 (The map needs to be set up differently: when a waste type is selected, only the locations containing that type of waste should be highlighted. Also, the input windows on the map need to be changed—basically, just look at the screenshots to see what I mean. Jira scrum 53)
 bug№3 Map in mobile device mode
 (The map looks disproportionate in the mobile version; a screenshot is attached. Jira srum 58)
+bug№4 Page scaling in mobile mode
+(On the project page, everything is too cramped in the mobile version (see attached screenshot). Additionally, the links to other pages are positioned too close together, and the theme-switching icon is hidden. Jira scrum 75)
+bug№5 Error adding a point on the map
+(When adding a point to the map, an error window appears stating that the point was not created. Jira scrum 76)
+bug№6 Error deleting points from the map
+(When deleting a point from the map, a server error occurs, indicating that the point cannot be removed. Jira scrum 77)
+bug№7 Sorting search doesn't work
+(On the main page, searching or sorting by item name does not work; nothing happens when the "find" button is clicked. Jira scrum 78)
