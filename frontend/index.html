@@ -3,6 +3,11 @@
 
 <head>
   <meta charset="UTF-8">
+    <script>
+    // Мгновенная установка темы из localStorage до отрисовки страницы
+    const savedTheme = localStorage.getItem('theme') || 'dark';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+  </script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ЭкоГомель</title>
   <link rel="stylesheet" href="style.css">
@@ -48,9 +53,9 @@
           <span class="search-bar__icon">
             <img src="search.svg" alt="Поиск">
           </span>
-          <input type="text" placeholder="Введите название предмета, например: аккумулятор, пластиковая бутылка..."
+          <input type="text" id="mainSearchInput" placeholder="Введите название предмета, например: аккумулятор, пластиковая бутылка..."
             class="search-bar__input">
-          <button class="btn btn--primary">Найти</button>
+          <button id="mainSearchBtn" class="btn btn--primary">Найти</button>
         </div>
 
         <!-- Быстрый выбор маркировки -->
@@ -151,6 +156,7 @@
   <!-- Подключение скриптов Leaflet -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="api.js"></script>
+  <script src="search.js"></script>
   
   <!-- Скрипт инициализации мини-карты и геолокации -->
   <script>
@@ -379,7 +385,7 @@
     });
   </script>
 
-  <!-- Скрипт для отрисовки отходов (категорий и тегов) -->
+  <!-- Скрипт для отрисовки отходов (категорий и тегов) + обработчик поисковой строки -->
   <script>
     const CATEGORY_CARDS = [
       { category: 'Пластик', icon: 'plastic.svg' },
@@ -413,12 +419,26 @@
     function renderCategoryCards(waste) {
       const container = document.getElementById('categoriesGrid');
       if (!container) return;
+      
       container.innerHTML = CATEGORY_CARDS.map(({ category, icon }) => {
-        const count = waste.filter((item) => item.category === category).length;
+        // Находим все элементы данной категории из базы
+        const categoryItems = waste.filter((item) => item.category === category);
+        const count = categoryItems.length;
+        
+        // Берем самый первый отход из этой категории
+        const firstItem = categoryItems.length > 0 ? categoryItems[0] : null;
+        
+        // Ссылка ведет прямо на ID этого первого отхода
+        const targetHref = firstItem ? `waste.html?id=${firstItem.id}` : `waste.html?category=${encodeURIComponent(category)}`;
+        
+        // Текст подписи: название первого элемента или количество видов, если пусто
+        const subText = firstItem ? `${escapeHtml(firstItem.name)}` : wasteCountLabel(count);
+
         return `
-          <a class="card" href="waste.html?category=${encodeURIComponent(category)}" data-category="${category}">
+          <a class="card" href="${targetHref}" data-category="${category}">
             <div class="card__icon"><img src="${icon}" alt="${category}"></div>
             <h3 class="card__title">${category}</h3>
+            <span class="card__subtitle" style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 4px; display: block;">${subText}</span>
             <span class="card__count">${wasteCountLabel(count)}</span>
           </a>
         `;
@@ -447,13 +467,56 @@
         renderCodeTags(waste);
       } catch (error) {
         console.error('Не удалось загрузить отходы:', error);
-        const message = '<p>Не удалось загрузить данные. Проверьте, запущен ли сервер.</p>';
+        const message = '[cite: 1]';
         document.getElementById('categoriesGrid').innerHTML = message;
         document.getElementById('tagsGrid').innerHTML = message;
       }
     }
 
-    document.addEventListener('DOMContentLoaded', renderWasteSections);
+    // Подключение поиска на главной странице
+    document.addEventListener('DOMContentLoaded', () => {
+      renderWasteSections();
+
+      const mainInput = document.getElementById('mainSearchInput');
+      const mainBtn = document.querySelector('.search-bar .btn--primary');
+
+      async function handleMainSearch() {
+        if (!mainInput) return;
+        const query = mainInput.value.trim().toLowerCase();
+        if (!query) return;
+
+        try {
+          const allWaste = await EcoAPI.getWaste();
+          
+          // Полнотекстовый поиск по полям name, code, category и keywords
+          const foundList = allWaste.filter(item => {
+            const nameMatch = item.name && item.name.toLowerCase().includes(query);
+            const codeMatch = item.code && item.code.toLowerCase().includes(query);
+            const categoryMatch = item.category && item.category.toLowerCase().includes(query);
+            const keywordsMatch = Array.isArray(item.keywords) && item.keywords.some(k => k.toLowerCase().includes(query));
+            return nameMatch || codeMatch || categoryMatch || keywordsMatch;
+          });
+
+          if (foundList.length === 1) {
+            window.location.href = `waste.html?id=${foundList[0].id}`;
+          } else {
+            window.location.href = `waste.html?search=${encodeURIComponent(query)}`;
+          }
+        } catch (err) {
+          console.error('Ошибка поиска:', err);
+          window.location.href = `waste.html?search=${encodeURIComponent(query)}`;
+        }
+      }
+
+      if (mainBtn && mainInput) {
+        mainBtn.addEventListener('click', handleMainSearch);
+        mainInput.addEventListener('keypress', (e) => {
+          if (e.key === 'Enter') {
+            handleMainSearch();
+          }
+        });
+      }
+    });
   </script>
 
   <script src="theme.js"></script>
