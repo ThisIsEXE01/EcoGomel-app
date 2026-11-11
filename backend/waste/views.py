@@ -7,22 +7,26 @@ from .models import DropoffPoint, WasteItem
 morph = pymorphy3.MorphAnalyzer()
 
 
-def get_word_lemmas(text: str) -> list[str]:
-  """Разбивает текст на слова и получает их нормальные формы (леммы)."""
+def get_word_lemmas(text: str) -> list[set[str]]:
+  """Разбивает текст на слова и для каждого слова возвращает набор лемм и форм (для OR внутри слова)."""
   words = text.strip().split()
-  lemmas = set()
+  term_groups = []
 
   for word in words:
     clean_word = word.strip(',.!?:;()[]{}""\'')
     if not clean_word:
       continue
 
-    lemmas.add(clean_word.lower())
+    variants = {clean_word.lower()}
     parsed = morph.parse(clean_word)
     for p in parsed:
-      lemmas.add(p.normal_form.lower())
+      variants.add(p.normal_form.lower())
+      for form in p.lexeme:
+        variants.add(form.word.lower())
 
-  return list(lemmas)
+    term_groups.append(variants)
+
+  return term_groups
 
 
 def waste_to_dict(item):
@@ -53,26 +57,26 @@ def waste_list(request):
 
   queryset = WasteItem.objects.all()
 
-  # 1. Общий поиск с поддержкой морфологии (по названию, категории, ключевым словам И коду)
+  # 1. Общий поиск с морфологией: OR внутри вариантов слова, AND между разными словами
   search_query = request.GET.get('search', '').strip()
   if search_query:
-    search_terms = get_word_lemmas(search_query)
+    word_groups = get_word_lemmas(search_query)
 
     q_objects = Q()
-    for term in search_terms:
-      # Для каждого термина ищем совпадение хотя бы в одном из полей (OR)
-      term_query = (
-          Q(name__icontains=term)
-          | Q(category__icontains=term)
-          | Q(keywords__icontains=term)
-          | Q(code__icontains=term)
-      )
-      # Между всеми терминами из запроса требуется полное совпадение (AND)
-      q_objects &= term_query
+    for variants in word_groups:
+      word_query = Q()
+      for term in variants:
+        word_query |= (
+            Q(name__icontains=term)
+            | Q(category__icontains=term)
+            | Q(keywords__icontains=term)
+            | Q(code__icontains=term)
+        )
+      q_objects &= word_query
 
     queryset = queryset.filter(q_objects).distinct()
 
-  # 2. Фильтрация по конкретному коду (например, ?code=01 или ?code=PET)
+  # 2. Фильтрация по конкретному коду
   code_query = request.GET.get('code', '').strip()
   if code_query:
     queryset = queryset.filter(code__icontains=code_query)
@@ -82,7 +86,7 @@ def waste_list(request):
   if category:
     queryset = queryset.filter(category__iexact=category)
 
-  # 4. Фильтрация по перерабатываемости (true / false)
+  # 4. Фильтрация по перерабатываемости
   recyclable = request.GET.get('recyclable', '').strip()
   if recyclable.lower() in ['true', '1']:
     queryset = queryset.filter(recyclable=True)
@@ -114,14 +118,7 @@ def waste_detail(request, pk):
 
 
 def point_to_dict(point):
-  """Превращает пункт приёма в формат JSON для карты Leaflet.
-
-  Координаты отдаются числами (float), а не строками, чтобы их можно
-  было сразу передать в L.marker([latitude, longitude]).
-  accepted_types — уникальные категории принимаемых отходов
-  (map_filter_category, а если она пустая — category); они совпадают
-  со значениями фильтров на странице карты.
-  """
+  """Превращает пункт приёма в формат JSON для карты Leaflet."""
   accepted_types = sorted({
       waste.map_filter_category or waste.category
       for waste in point.accepted_types.all()
@@ -144,8 +141,7 @@ def points_list(request):
 
   GET /api/points/?waste_id=1
 
-  Список пунктов приёма для карты. Параметр waste_id оставляет только
-  пункты, которые принимают отход с этим id (нечисловое значение -> 400).
+  Список пунктов приёма для карты.
   """
   if request.method != 'GET':
     return JsonResponse({'error': 'Method not allowed'}, status=405)

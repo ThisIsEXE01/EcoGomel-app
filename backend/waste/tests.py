@@ -82,9 +82,6 @@ class PointsApiTests(TestCase):
 
   def test_accepted_types_are_unique_filter_categories(self):
     point = self.client.get("/api/points/").json()[0]
-
-    # у «Плотного полиэтилена» нет map_filter_category -> берётся category,
-    # дубликат «Пластик» схлопывается
     self.assertEqual(point["accepted_types"], ["Батарейки", "Пластик"])
 
   def test_point_without_accepted_types(self):
@@ -123,7 +120,6 @@ class PointsApiTests(TestCase):
 
   def test_filter_keeps_all_accepted_types_of_point(self):
     data = self.client.get(f"/api/points/?waste_id={self.pet.id}").json()
-
     self.assertEqual(data[0]["accepted_types"], ["Батарейки", "Пластик"])
 
   def test_filter_without_matches_returns_empty_list(self):
@@ -140,7 +136,6 @@ class PointsApiTests(TestCase):
 
   def test_only_get_is_allowed(self):
     response = self.client.post("/api/points/")
-
     self.assertEqual(response.status_code, 405)
 
 
