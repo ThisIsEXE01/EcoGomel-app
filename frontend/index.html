@@ -83,32 +83,31 @@
     <!-- ДВУХКОЛОНОЧНЫЙ МАКЕТ (Пример карточки отхода + пункты / Карта) -->
     <section class="content-layout container">
       <div class="main-content">
-        <div class="info-card">
-          <div class="info-card__header">
-            <h2>Название отхода</h2>
-            <div class="badges">
-              <span class="badge badge--success">✔ перерабатывается</span>
-              <span class="badge badge--warning">Опасный отход, класс II</span>
-            </div>
-          </div>
-          <p class="info-card__desc">Краткое описание</p>
-        </div>
-
-        <div class="info-card">
-          <h3>Как подготовить к сдаче</h3>
-          <ul class="steps-list">
-            <li><span class="step-num">1</span> 1 пункт</li>
-            <li><span class="step-num">2</span> 2 пункт</li>
-            <li><span class="step-num">3</span> 3 пункт</li>
-            <li><span class="step-num">4</span> 4 пункт</li>
-          </ul>
-        </div>
-
-        <div class="info-card">
-          <h3>Что происходит при переработке?</h3>
-          <p class="info-card__desc">Краткое описание</p>
-        </div>
+  <div class="info-card">
+    <div class="info-card__header">
+      <h2>Главные правила сортировки</h2>
+      <div class="badges">
+        <span class="badge badge--success">Памятка</span>
       </div>
+    </div>
+    <p class="info-card__desc">Простые шаги, которые делают вторичное сырьё пригодным для переработки.</p>
+  </div>
+
+  <div class="info-card">
+    <h3>4 золотых правила</h3>
+    <ul class="steps-list">
+      <li><span class="step-num">1</span> <b>Очищайте:</b> Сдавайте тару без остатков еды и жидкостей</li>
+      <li><span class="step-num">2</span> <b>Уменьшайте объём:</b> Сминайте коробки, ПЭТ-бутылки и алюминиевые банки</li>
+      <li><span class="step-num">3</span> <b>Опасное — отдельно:</b> Батарейки, градусники и лампы несите только в спецпункты</li>
+      <li><span class="step-num">4</span> <b>Смотрите код:</b> Проверяйте маркировку на дне или этикетке товара</li>
+    </ul>
+  </div>
+
+  <div class="info-card">
+    <h3>Зачем это нужно?</h3>
+    <p class="info-card__desc">Чистые и правильно отсортированные отходы отправляются напрямую на заводы Гомельщины, минуя полигоны ТБО.</p>
+  </div>
+</div>
 
       <!-- Боковая панель с пунктами приема -->
       <aside class="sidebar">
@@ -416,30 +415,26 @@
       return `${count} ${word} отходов`;
     }
 
-    function renderCategoryCards(waste) {
+function renderCategoryCards(waste) {
       const container = document.getElementById('categoriesGrid');
       if (!container) return;
       
       container.innerHTML = CATEGORY_CARDS.map(({ category, icon }) => {
-        // Находим все элементы данной категории из базы
+        // Считаем количество элементов данной категории из базы
         const categoryItems = waste.filter((item) => item.category === category);
         const count = categoryItems.length;
         
-        // Берем самый первый отход из этой категории
-        const firstItem = categoryItems.length > 0 ? categoryItems[0] : null;
+        // Ссылка теперь ведет в каталог с установленным параметром search по названию категории
+        const targetHref = `waste.html?category=${encodeURIComponent(category)}`;
         
-        // Ссылка ведет прямо на ID этого первого отхода
-        const targetHref = firstItem ? `waste.html?id=${firstItem.id}` : `waste.html?category=${encodeURIComponent(category)}`;
-        
-        // Текст подписи: название первого элемента или количество видов, если пусто
-        const subText = firstItem ? `${escapeHtml(firstItem.name)}` : wasteCountLabel(count);
+        // В подписи выводим общее количество видов
+        const subText = wasteCountLabel(count);
 
         return `
           <a class="card" href="${targetHref}" data-category="${category}">
             <div class="card__icon"><img src="${icon}" alt="${category}"></div>
             <h3 class="card__title">${category}</h3>
-            <span class="card__subtitle" style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 4px; display: block;">${subText}</span>
-            <span class="card__count">${wasteCountLabel(count)}</span>
+            <span class="card__count">${subText}</span>
           </a>
         `;
       }).join('');
@@ -460,14 +455,14 @@
       }).join('');
     }
 
-    async function renderWasteSections() {
+async function renderWasteSections() {
       try {
         const waste = await EcoAPI.getWaste();
         renderCategoryCards(waste);
         renderCodeTags(waste);
       } catch (error) {
         console.error('Не удалось загрузить отходы:', error);
-        const message = '[cite: 1]';
+        const message = '<p class="cards-loading" style="color: #ef4444;">Не удалось загрузить данные. Проверьте соединение с сервером.</p>';
         document.getElementById('categoriesGrid').innerHTML = message;
         document.getElementById('tagsGrid').innerHTML = message;
       }
