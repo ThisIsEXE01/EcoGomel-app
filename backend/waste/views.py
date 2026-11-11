@@ -8,7 +8,7 @@ morph = pymorphy3.MorphAnalyzer()
 
 
 def get_word_lemmas(text: str) -> list[set[str]]:
-  """Разбивает текст на слова и для каждого слова возвращает набор лемм и форм (для OR внутри слова)."""
+  """Разбивает текст на слова и возвращает варианты (исходное, лемму и их капитализированные версии для обхода ограничений SQLite с кириллицей)."""
   words = text.strip().split()
   term_groups = []
 
@@ -17,12 +17,20 @@ def get_word_lemmas(text: str) -> list[set[str]]:
     if not clean_word:
       continue
 
-    variants = {clean_word.lower()}
+    clean_lower = clean_word.lower()
+    variants = {clean_lower, clean_word, clean_lower.capitalize()}
+
     parsed = morph.parse(clean_word)
     for p in parsed:
-      variants.add(p.normal_form.lower())
+      nf = p.normal_form.lower()
+      variants.add(nf)
+      variants.add(nf.capitalize())
+
+      # Добавляем все формы слова из парадигмы
       for form in p.lexeme:
-        variants.add(form.word.lower())
+        fw = form.word.lower()
+        variants.add(fw)
+        variants.add(fw.capitalize())
 
     term_groups.append(variants)
 
@@ -57,24 +65,25 @@ def waste_list(request):
 
   queryset = WasteItem.objects.all()
 
-  # 1. Общий поиск с морфологией: OR внутри вариантов слова, AND между разными словами
+  # 1. Общий поиск с морфологией: AND между разными словами, OR внутри вариантов слова
   search_query = request.GET.get('search', '').strip()
   if search_query:
     word_groups = get_word_lemmas(search_query)
 
-    q_objects = Q()
     for variants in word_groups:
       word_query = Q()
       for term in variants:
-        word_query |= (
-            Q(name__icontains=term)
-            | Q(category__icontains=term)
-            | Q(keywords__icontains=term)
-            | Q(code__icontains=term)
-        )
-      q_objects &= word_query
+        if len(term) >= 2:
+          word_query |= (
+              Q(name__icontains=term)
+              | Q(category__icontains=term)
+              | Q(keywords__icontains=term)
+              | Q(code__icontains=term)
+          )
+      if word_query:
+        queryset = queryset.filter(word_query)
 
-    queryset = queryset.filter(q_objects).distinct()
+    queryset = queryset.distinct()
 
   # 2. Фильтрация по конкретному коду
   code_query = request.GET.get('code', '').strip()
