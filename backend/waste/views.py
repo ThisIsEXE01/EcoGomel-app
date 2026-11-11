@@ -4,25 +4,25 @@ import pymorphy3
 
 from .models import DropoffPoint, WasteItem
 
-# Инициализируем морфологический анализатор
 morph = pymorphy3.MorphAnalyzer()
 
 
 def get_word_lemmas(text: str) -> list[str]:
-  """Возвращает список исходных слов и их нормальных форм (лемм)
-
-  для поддержки поиска по разным словоформам (например, бутылка/бутылки).
-  """
+  """Разбивает текст на слова и получает их нормальные формы (леммы)."""
   words = text.strip().split()
-  query_words = set()
+  lemmas = set()
 
   for word in words:
-    query_words.add(word)  # Сохраняем оригинал (для кодов и точного совпадения)
-    parsed = morph.parse(word)
-    if parsed:
-      query_words.add(parsed[0].normal_form)
+    clean_word = word.strip(',.!?:;()[]{}""\'')
+    if not clean_word:
+      continue
 
-  return list(query_words)
+    lemmas.add(clean_word.lower())
+    parsed = morph.parse(clean_word)
+    for p in parsed:
+      lemmas.add(p.normal_form.lower())
+
+  return list(lemmas)
 
 
 def waste_to_dict(item):
@@ -46,7 +46,7 @@ def waste_list(request):
 
   GET /api/waste/?search=PET&code=01&category=Пластик&recyclable=true
 
-  Получение списка отходов с поиском и фильтрацией.
+  Получение списка отходов с морфологическим поиском и фильтрацией.
   """
   if request.method != 'GET':
     return JsonResponse({'error': 'Method not allowed'}, status=405)
@@ -60,12 +60,16 @@ def waste_list(request):
 
     q_objects = Q()
     for term in search_terms:
-      q_objects |= (
+      # Для каждого термина ищем совпадение хотя бы в одном из полей (OR)
+      term_query = (
           Q(name__icontains=term)
           | Q(category__icontains=term)
           | Q(keywords__icontains=term)
           | Q(code__icontains=term)
       )
+      # Между всеми терминами из запроса требуется полное совпадение (AND)
+      q_objects &= term_query
+
     queryset = queryset.filter(q_objects).distinct()
 
   # 2. Фильтрация по конкретному коду (например, ?code=01 или ?code=PET)
@@ -86,7 +90,9 @@ def waste_list(request):
     queryset = queryset.filter(recyclable=False)
 
   data = [waste_to_dict(item) for item in queryset]
-  return JsonResponse(data, safe=False, json_dumps_params={'ensure_ascii': False})
+  return JsonResponse(
+      data, safe=False, json_dumps_params={'ensure_ascii': False}
+  )
 
 
 def waste_detail(request, pk):
@@ -102,7 +108,9 @@ def waste_detail(request, pk):
   except WasteItem.DoesNotExist:
     return JsonResponse({'error': 'Waste item not found'}, status=404)
 
-  return JsonResponse(waste_to_dict(item), json_dumps_params={'ensure_ascii': False})
+  return JsonResponse(
+      waste_to_dict(item), json_dumps_params={'ensure_ascii': False}
+  )
 
 
 def point_to_dict(point):
@@ -114,12 +122,10 @@ def point_to_dict(point):
   (map_filter_category, а если она пустая — category); они совпадают
   со значениями фильтров на странице карты.
   """
-  accepted_types = sorted(
-      {
-          waste.map_filter_category or waste.category
-          for waste in point.accepted_types.all()
-      }
-  )
+  accepted_types = sorted({
+      waste.map_filter_category or waste.category
+      for waste in point.accepted_types.all()
+  })
 
   return {
       'id': point.id,
