@@ -154,6 +154,12 @@ class WasteSearchMorphologyTests(TestCase):
         category="Опасные отходы",
         recyclable=False,
     )
+    self.item3 = WasteItem.objects.create(
+        name="Пластиковый пакет",
+        code="LDPE-02",
+        category="Пластик",
+        recyclable=True,
+    )
 
   def test_search_wordforms_plural_and_singular(self):
     """Проверка поиска по разным словоформам (бутылка / бутылки, батарейка / батарейки)."""
@@ -166,6 +172,16 @@ class WasteSearchMorphologyTests(TestCase):
     self.assertEqual(response.status_code, 200)
     data = response.json()
     self.assertTrue(any(item["id"] == self.item2.id for item in data))
+
+  def test_multi_word_search_strict_and(self):
+    """Проверка многословного поиска: 'пластиковая бутылка' находит бутылку, но не пакет."""
+    response = self.client.get("/api/waste/?search=пластиковая+бутылка")
+    self.assertEqual(response.status_code, 200)
+    data = response.json()
+
+    item_ids = [item["id"] for item in data]
+    self.assertIn(self.item1.id, item_ids)
+    self.assertNotIn(self.item3.id, item_ids)
 
   def test_search_by_code_intact(self):
     """Проверка, что поиск по коду не сломался."""
