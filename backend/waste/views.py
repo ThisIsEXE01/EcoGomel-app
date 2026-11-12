@@ -21,13 +21,12 @@ def get_word_lemmas(text: str) -> list[set[str]]:
     variants = {clean_lower, clean_word, clean_lower.capitalize()}
 
     parsed = morph.parse(clean_word)
-    for p in parsed:
-      nf = p.normal_form.lower()
-      variants.add(nf)
-      variants.add(nf.capitalize())
+    if parsed:
+        p = parsed[0]
+        nf = p.normal_form.lower()
+        variants.add(nf)
 
-      # Добавляем все формы слова из парадигмы
-      for form in p.lexeme:
+    for form in p.lexeme:
         fw = form.word.lower()
         variants.add(fw)
         variants.add(fw.capitalize())
