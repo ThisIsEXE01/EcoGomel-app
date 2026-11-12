@@ -14,22 +14,23 @@ def get_word_lemmas(text: str) -> list[set[str]]:
 
   for word in words:
     clean_word = word.strip(',.!?:;()[]{}""\'')
+
     if not clean_word:
       continue
 
     clean_lower = clean_word.lower()
     variants = {clean_lower, clean_word, clean_lower.capitalize()}
-
     parsed = morph.parse(clean_word)
+
     if parsed:
         p = parsed[0]
         nf = p.normal_form.lower()
         variants.add(nf)
 
-    for form in p.lexeme:
-        fw = form.word.lower()
-        variants.add(fw)
-        variants.add(fw.capitalize())
+        for form in p.lexeme:
+            fw = form.word.lower()
+            variants.add(fw)
+            variants.add(fw.capitalize())
 
     term_groups.append(variants)
 
