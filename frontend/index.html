@@ -107,7 +107,7 @@
 
         <div class="info-card">
           <h3>Что происходит при переработке?</h3>
-          <p class="info-card__desc" style="margin-bottom: 16px;">
+          <p class="info-card__desc">
             После сдачи в пункт приема вторсырье проходит несколько этапов, чтобы превратиться в новые вещи:
           </p>
           <ul class="custom-bullet-list">
@@ -118,7 +118,7 @@
           </ul>
         </div>
       </div>
-
+      
       <!-- Боковая панель с пунктами приема -->
       <aside class="sidebar">
         <div class="map-preview">
@@ -425,30 +425,26 @@
       return `${count} ${word} отходов`;
     }
 
-    function renderCategoryCards(waste) {
+function renderCategoryCards(waste) {
       const container = document.getElementById('categoriesGrid');
       if (!container) return;
       
       container.innerHTML = CATEGORY_CARDS.map(({ category, icon }) => {
-        // Находим все элементы данной категории из базы
+        // Считаем количество элементов данной категории из базы
         const categoryItems = waste.filter((item) => item.category === category);
         const count = categoryItems.length;
         
-        // Берем самый первый отход из этой категории
-        const firstItem = categoryItems.length > 0 ? categoryItems[0] : null;
+        // Ссылка теперь ведет в каталог с установленным параметром search по названию категории
+        const targetHref = `waste.html?category=${encodeURIComponent(category)}`;
         
-        // Ссылка ведет прямо на ID этого первого отхода
-        const targetHref = firstItem ? `waste.html?id=${firstItem.id}` : `waste.html?category=${encodeURIComponent(category)}`;
-        
-        // Текст подписи: название первого элемента или количество видов, если пусто
-        const subText = firstItem ? `${escapeHtml(firstItem.name)}` : wasteCountLabel(count);
+        // В подписи выводим общее количество видов
+        const subText = wasteCountLabel(count);
 
         return `
           <a class="card" href="${targetHref}" data-category="${category}">
             <div class="card__icon"><img src="${icon}" alt="${category}"></div>
             <h3 class="card__title">${category}</h3>
-            <span class="card__subtitle" style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 4px; display: block;">${subText}</span>
-            <span class="card__count">${wasteCountLabel(count)}</span>
+            <span class="card__count">${subText}</span>
           </a>
         `;
       }).join('');
@@ -469,14 +465,14 @@
       }).join('');
     }
 
-    async function renderWasteSections() {
+async function renderWasteSections() {
       try {
         const waste = await EcoAPI.getWaste();
         renderCategoryCards(waste);
         renderCodeTags(waste);
       } catch (error) {
         console.error('Не удалось загрузить отходы:', error);
-        const message = '[cite: 1]';
+        const message = '<p class="cards-loading" style="color: #ef4444;">Не удалось загрузить данные. Проверьте соединение с сервером.</p>';
         document.getElementById('categoriesGrid').innerHTML = message;
         document.getElementById('tagsGrid').innerHTML = message;
       }
