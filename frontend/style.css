@@ -660,6 +660,7 @@ a.card {
   height: 100%;
   object-fit: cover;
   display: block;
+  border-radius: var(--radius-lg);
 }
 
 .card--stat {
