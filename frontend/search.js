@@ -57,13 +57,10 @@ document.addEventListener('DOMContentLoaded', () => {
     dropdown.style.display = 'block';
 
     try {
-const baseUrl = (typeof EcoAPI !== 'undefined' && EcoAPI.BASE_URL) 
-  ? EcoAPI.BASE_URL 
-  : (window.location.protocol === 'file:' ? 'http://127.0.0.1:8000/api' : '/api');
-
-const response = await fetch(`${baseUrl}/waste/?search=${encodeURIComponent(query)}`, {
-  signal: abortController.signal
-});
+      const baseUrl = EcoAPI.BASE_URL;
+      const response = await fetch(`${baseUrl}/waste/?search=${encodeURIComponent(query)}`, {
+        signal: abortController.signal
+      });
       const data = await response.json();
       const list = Array.isArray(data) ? data : (data.results || []);
 
