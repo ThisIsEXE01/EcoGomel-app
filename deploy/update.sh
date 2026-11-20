@@ -26,7 +26,17 @@ else
   exit 1
 fi
 
-pip install -r backend/requirements.txt
+REQUIREMENTS_FILE="$PROJECT_ROOT/backend/requirements.txt"
+REQUIREMENTS_HASH_FILE="${VIRTUAL_ENV:-$HOME/.virtualenvs/$VENV_NAME}/.ecogomel_requirements_hash"
+REQUIREMENTS_HASH="$(sha256sum "$REQUIREMENTS_FILE" | awk '{print $1}')"
+
+if [ ! -f "$REQUIREMENTS_HASH_FILE" ] || [ "$(cat "$REQUIREMENTS_HASH_FILE")" != "$REQUIREMENTS_HASH" ]; then
+  echo "requirements.txt изменился — устанавливаю зависимости..."
+  pip install -r "$REQUIREMENTS_FILE"
+  printf '%s\n' "$REQUIREMENTS_HASH" > "$REQUIREMENTS_HASH_FILE"
+else
+  echo "requirements.txt не изменился — pip install пропущен."
+fi
 
 cd backend
 python manage.py migrate --noinput
