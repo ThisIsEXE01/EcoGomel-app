@@ -38,6 +38,11 @@ cd backend
 python -m venv .venv
 .\.venv\Scripts\activate
 pip install -r requirements.txt
+```
+
+Скопируйте `backend/.env.example` в `backend/.env` и при необходимости поправьте значения. Для локальной разработки в примере уже включён `DJANGO_DEBUG=True`.
+
+```bash
 python manage.py migrate
 python manage.py import_waste
 python manage.py import_dropoff_points
@@ -47,7 +52,7 @@ python manage.py runserver
 Бэкенд будет доступен по адресу `http://localhost:8000`, API — по префиксу `/api/`.
 
 ### 2. Клиент (Frontend):
-Бэкенд должен быть запущен. Откройте `frontend/index.html` в браузере — локальный сервер для фронтенда не нужен.
+Бэкенд должен быть запущен. Можно открыть `frontend/index.html` в браузере или тот же сайт через Django: `http://localhost:8000/` — WhiteNoise раздаёт папку `frontend/` с корня.
 
 Адрес API задаётся в одном месте — `frontend/api.js` (`API_BASE_URL`).
 
@@ -57,3 +62,9 @@ python manage.py runserver
 - `GET /api/points/` — пункты приёма (фильтр `?waste_id=<id>`).
 
 Подробнее об интеграции с API — [docs/api-integration.md](docs/api-integration.md) (English: [api-integration.en.md](docs/api-integration.en.md)).
+
+## 🌐 Деплой
+
+Пошаговая инструкция для бесплатного PythonAnywhere: [docs/deploy-pythonanywhere.md](docs/deploy-pythonanywhere.md).
+
+Кратко: Django отдаёт API и админку, WhiteNoise раздаёт `frontend/` с корня сайта. На хостинге нужен `backend/.env` с `DJANGO_DEBUG=False`, `DJANGO_SECRET_KEY`, `DJANGO_ALLOWED_HOSTS` и `DJANGO_CSRF_TRUSTED_ORIGINS`.
