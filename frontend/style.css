@@ -843,3 +843,15 @@ a.card {
     width: 100%;
   }
 }
+
+/* MVP: админские элементы скрыты до релиза админки. */
+[data-admin-only] {
+  display: none !important;
+}
+
+.form-status {
+  margin-top: 0.75rem;
+  color: var(--accent-light);
+  font-size: 0.9rem;
+  line-height: 1.4;
+}

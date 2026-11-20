@@ -1,0 +1,32 @@
+"""
+Пример WSGI-конфигурации для PythonAnywhere.
+
+Как использовать:
+1. Откройте Web-вкладку своего приложения на PythonAnywhere.
+2. Нажмите на ссылку WSGI configuration file.
+3. Замените содержимое файла этим шаблоном.
+4. Замените USERNAME на ваше имя пользователя PythonAnywhere.
+5. Убедитесь, что PROJECT_PATH указывает на папку backend репозитория.
+6. Нажмите Reload.
+
+Виртуальное окружение (virtualenv) выбирается в Web-вкладке отдельно,
+в блоке Virtualenv.
+"""
+
+import os
+import sys
+
+PROJECT_PATH = "/home/USERNAME/EcoGomel-app/backend"
+
+if PROJECT_PATH not in sys.path:
+    sys.path.insert(0, PROJECT_PATH)
+
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings")
+
+# Страховка: на хостинге DEBUG должен быть выключен.
+# Значения из backend/.env имеют приоритет, если переменная ещё не задана.
+os.environ.setdefault("DJANGO_DEBUG", "False")
+
+from django.core.wsgi import get_wsgi_application  # noqa: E402
+
+application = get_wsgi_application()
