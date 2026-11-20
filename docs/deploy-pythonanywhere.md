@@ -6,7 +6,7 @@
 
 - Аккаунт PythonAnywhere (free-тарифа достаточно для MVP).
 - Репозиторий: `https://github.com/ThisIsEXE01/EcoGomel-app.git`.
-- Ветка с деплоем: `develop` или `deploy/pythonanywhere-mvp` после merge.
+- Ветка с деплоем: `deploy/pythonanywhere-mvp` до merge или `develop` после merge.
 - Python 3.12 или 3.13. Django 6.1 не поддерживает версии ниже 3.12.
 
 ## 2. Первый деплой
@@ -19,7 +19,12 @@
 cd ~
 git clone https://github.com/ThisIsEXE01/EcoGomel-app.git
 cd EcoGomel-app
-git checkout develop
+
+# До merge используйте ветку деплоя:
+git checkout deploy/pythonanywhere-mvp
+
+# После merge в develop можно использовать develop:
+# git checkout develop
 
 mkvirtualenv --python=/usr/bin/python3.13 ecogomel
 workon ecogomel
