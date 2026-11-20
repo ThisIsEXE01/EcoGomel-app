@@ -62,9 +62,3 @@ python manage.py runserver
 - `GET /api/points/` — пункты приёма (фильтр `?waste_id=<id>`).
 
 Подробнее об интеграции с API — [docs/api-integration.md](docs/api-integration.md) (English: [api-integration.en.md](docs/api-integration.en.md)).
-
-## 🌐 Деплой
-
-Пошаговая инструкция для бесплатного PythonAnywhere: [docs/deploy-pythonanywhere.md](docs/deploy-pythonanywhere.md).
-
-Кратко: Django отдаёт API и админку, WhiteNoise раздаёт `frontend/` с корня сайта. На хостинге нужен `backend/.env` с `DJANGO_DEBUG=False`, `DJANGO_SECRET_KEY`, `DJANGO_ALLOWED_HOSTS` и `DJANGO_CSRF_TRUSTED_ORIGINS`.
