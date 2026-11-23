@@ -67,3 +67,53 @@ class DropoffPoint(models.Model):
     def __str__(self):
         return self.name
 
+
+# класс для предложенных новых точек приёма
+class PointSuggestion(models.Model):
+    class Status(models.TextChoices):
+        PENDING = "pending", "На модерации"
+        APPROVED = "approved", "Одобрено"
+        REJECTED = "rejected", "Отклонено"
+
+    name = models.CharField(max_length=300)
+    address = models.CharField(max_length=300)
+
+    latitude = models.DecimalField(
+        max_digits=9,
+        decimal_places=6,
+        null=True,
+        blank=True
+    )
+
+    longitude = models.DecimalField(
+        max_digits=9,
+        decimal_places=6,
+        null=True,
+        blank=True
+    )
+
+    working_hours = models.CharField(max_length=300, blank=True)
+    description = models.TextField(default="", blank=True)
+
+    accepted_types = models.ManyToManyField(
+        WasteItem,
+        blank=True,
+        related_name="point_suggestions"
+    )
+
+    contact_email = models.EmailField(blank=True)
+
+    status = models.CharField(
+        max_length=20,
+        choices=Status.choices,
+        default=Status.PENDING
+    )
+
+    ip_address = models.GenericIPAddressField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"{self.name} ({self.get_status_display()})"
