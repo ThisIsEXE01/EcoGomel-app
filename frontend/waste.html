@@ -287,10 +287,48 @@
     }
 
     let cachedWasteItems = []; // Кэш данных для фильтрации
+    let currentSearchQuery = '';
+    let currentCategoryFilter = null;
+
+    // Фильтрация кэша по поисковому запросу
+    function filterItemsBySearch(items, query) {
+      const normalized = String(query || '').trim().toLowerCase();
+      if (!normalized) return items;
+
+      return items.filter(item => {
+        const nameMatch = item.name && item.name.toLowerCase().includes(normalized);
+        const codeMatch = item.code && item.code.toLowerCase().includes(normalized);
+        const categoryMatch = item.category && item.category.toLowerCase().includes(normalized);
+        const keywordsMatch = Array.isArray(item.keywords) && item.keywords.some(k => k.toLowerCase().includes(normalized));
+        return nameMatch || codeMatch || categoryMatch || keywordsMatch;
+      });
+    }
+
+    // Состояние каталога в URL, чтобы фильтры переживали перезагрузку
+    function syncCatalogUrl() {
+      const params = new URLSearchParams();
+      if (currentSearchQuery) params.set('search', currentSearchQuery);
+      if (currentCategoryFilter) params.set('category', currentCategoryFilter);
+      const queryString = params.toString();
+      try {
+        history.replaceState(null, '', queryString ? `waste.html?${queryString}` : 'waste.html');
+      } catch (error) {
+        // На file:// браузер может запрещать изменение URL — фильтры продолжат работать
+      }
+    }
+
+    function renderCatalog() {
+      const searchedItems = filterItemsBySearch(cachedWasteItems, currentSearchQuery);
+      renderCategoriesCatalog(searchedItems, currentCategoryFilter, currentSearchQuery);
+    }
 
     // ДИНАМИЧЕСКИЙ РЕНДЕР КАТЕГОРИЙ С ПОЛНОЙ ФИЛЬТРАЦИЕЙ
-    function renderCategoriesCatalog(allWasteItems = [], activeCategoryFilter = null) {
-      document.title = activeCategoryFilter ? `${activeCategoryFilter} — ЭкоГомель` : 'Все категории — ЭкоГомель';
+    function renderCategoriesCatalog(allWasteItems = [], activeCategoryFilter = null, searchQuery = '') {
+      if (searchQuery) {
+        document.title = `${searchQuery} — поиск — ЭкоГомель`;
+      } else {
+        document.title = activeCategoryFilter ? `${activeCategoryFilter} — ЭкоГомель` : 'Все категории — ЭкоГомель';
+      }
 
       // 1. Собираем уникальные категории из базы
       const categoriesMap = {};
@@ -305,19 +343,20 @@
 
       const categoryNames = Object.keys(categoriesMap);
 
-      // Генерируем кнопки быстрого перехода (фильтрации)
-      const quickButtonsHtml = categoryNames.map(catName => {
+      // Список категорий для чипов: активный фильтр должен оставаться видимым,
+      // даже если поиск не нашёл в нём совпадений
+      const quickCategoryNames = activeCategoryFilter && !categoryNames.includes(activeCategoryFilter)
+        ? [...categoryNames, activeCategoryFilter]
+        : categoryNames;
+
+      // Кнопки-переключатели категорий
+      const quickButtonsHtml = quickCategoryNames.map(catName => {
         const isActive = activeCategoryFilter === catName;
-        return `<a href="#" class="quick-cat-btn ${isActive ? 'active' : ''}" onclick="filterByCategory(event, '${catName}')">${catName}</a>`;
+        return `<a href="#" class="quick-cat-btn ${isActive ? 'active' : ''}" data-category="${escapeHtml(catName)}" aria-pressed="${isActive}">${escapeHtml(catName)}</a>`;
       }).join('');
 
-      // Кнопка сброса фильтра, если выбрана конкретная категория
-      const resetFilterHtml = activeCategoryFilter 
-        ? `<div style="margin-bottom: 20px;"><a href="waste.html" class="btn btn--outline" style="font-size: 0.85rem; padding: 6px 14px; text-decoration: none; display: inline-block;">← Показать все категории</a></div>`
-        : '';
-
       // Если активен фильтр по категории, оставляем только её блок
-      const displayedCategories = activeCategoryFilter 
+      const displayedCategories = activeCategoryFilter
         ? categoryNames.filter(cat => cat === activeCategoryFilter)
         : categoryNames;
 
@@ -353,58 +392,83 @@
         `;
       }).join('');
 
+      const emptyMessage = searchQuery
+        ? `Ничего не найдено по запросу «${escapeHtml(searchQuery)}».`
+        : 'В данной категории нет позиций.';
+
+      const pageTitle = searchQuery
+        ? `Результаты поиска: «${escapeHtml(searchQuery)}»${activeCategoryFilter ? ` · ${escapeHtml(activeCategoryFilter)}` : ''}`
+        : (activeCategoryFilter ? `Категория: ${escapeHtml(activeCategoryFilter)}` : 'Все категории');
+
       contentContainer.innerHTML = `
         <div class="breadcrumbs">
           <a href="index.html">Главная</a> &gt; <span>Все категории</span>
         </div>
 
-        <h1 class="page-title">${activeCategoryFilter ? `Категория: ${escapeHtml(activeCategoryFilter)}` : 'Все категории'}</h1>
+        <h1 class="page-title">${pageTitle}</h1>
         <p class="page-subtitle">Найдите нужный предмет и узнайте, как подготовить его к сдаче и куда отнести в Гомеле.</p>
 
         <div class="catalog-search">
           <div class="catalog-search__input-wrapper">
             <img src="search.svg" alt="Поиск">
-            <input type="text" id="catalogSearchInput" class="catalog-search__input" placeholder="Название предмета, например: батарейка или термометр">
+            <input type="text" id="catalogSearchInput" class="catalog-search__input" value="${escapeHtml(searchQuery)}" placeholder="Название предмета, например: батарейка или термометр">
           </div>
           <button id="catalogSearchBtn" class="btn btn--primary">Найти</button>
         </div>
 
-        <div class="quick-categories" ${categoryNames.length === 0 ? 'style="display:none;"' : ''}>
+        <div class="quick-categories" ${quickCategoryNames.length === 0 ? 'style="display:none;"' : ''}>
           <span class="quick-categories__label">Фильтр по категориям:</span>
           <div class="quick-categories__list">
             ${quickButtonsHtml}
           </div>
         </div>
 
-        ${resetFilterHtml}
-
         <div class="categories-section-header">
-          <h2>${activeCategoryFilter ? 'Выбранная категория' : 'Отходы по категориям'}</h2>
-          <span>${activeCategoryFilter ? 'Показаны элементы выбранной категории' : 'Выберите предмет, чтобы узнать правила сдачи'}</span>
+          <h2>${searchQuery ? 'Найденные отходы' : (activeCategoryFilter ? 'Выбранная категория' : 'Отходы по категориям')}</h2>
+          <span>${searchQuery ? (activeCategoryFilter ? 'Показаны результаты поиска в выбранной категории' : 'Показаны все совпадения по запросу') : (activeCategoryFilter ? 'Показаны элементы выбранной категории' : 'Выберите предмет, чтобы узнать правила сдачи')}</span>
         </div>
 
         <div class="category-blocks-grid">
-          ${categoryCardsHtml || '<p style="color:var(--text-muted);">В данной категории нет позиций.</p>'}
+          ${categoryCardsHtml || `<p style="color:var(--text-muted);">${emptyMessage}</p>`}
         </div>
       `;
 
-      // Настройка локального поиска на странице
+      // Настройка локального поиска и переключателей категорий
       const searchInput = document.getElementById('catalogSearchInput');
       const searchBtn = document.getElementById('catalogSearchBtn');
       const doSearch = () => {
-        const query = searchInput.value.trim();
-        if (query) window.location.href = `waste.html?search=${encodeURIComponent(query)}`;
+        currentSearchQuery = searchInput.value.trim();
+        currentCategoryFilter = null;
+        syncCatalogUrl();
+        renderCatalog();
+
+        const nextInput = document.getElementById('catalogSearchInput');
+        if (nextInput) {
+          nextInput.focus();
+          nextInput.setSelectionRange(nextInput.value.length, nextInput.value.length);
+        }
       };
       if (searchBtn && searchInput) {
         searchBtn.addEventListener('click', doSearch);
         searchInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') doSearch(); });
       }
+
+      const quickList = document.querySelector('.quick-categories__list');
+      if (quickList) {
+        quickList.addEventListener('click', (event) => {
+          const button = event.target.closest('.quick-cat-btn');
+          if (!button) return;
+          event.preventDefault();
+          filterByCategory(button.dataset.category);
+        });
+      }
     }
 
-    // Обработчик клика по кнопке категории (фильтрация и скрытие остальных)
-    function filterByCategory(event, categoryName) {
-      event.preventDefault();
-      renderCategoriesCatalog(cachedWasteItems, categoryName);
+    // Переключатель категории: повторный клик снимает фильтр
+    function filterByCategory(categoryName) {
+      currentCategoryFilter = currentCategoryFilter === categoryName ? null : categoryName;
+      syncCatalogUrl();
+      renderCatalog();
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
@@ -465,8 +529,8 @@
     async function initWastePage() {
       const params = new URLSearchParams(window.location.search);
       const id = params.get('id');
-      const search = params.get('search');
-      const categoryParam = params.get('category');
+      currentSearchQuery = (params.get('search') || '').trim();
+      currentCategoryFilter = params.get('category') || null;
 
       try {
         cachedWasteItems = await EcoAPI.getWaste().catch(() => []);
@@ -481,33 +545,12 @@
           }
         }
 
-        // 2. Если передан параметр категории в URL
-        if (categoryParam) {
-          renderCategoriesCatalog(cachedWasteItems, categoryParam);
-          return;
-        }
-
-        // 3. Если передан поисковый запрос
-        if (search) {
-          const query = search.toLowerCase();
-          const filtered = cachedWasteItems.filter(item => {
-            const nameMatch = item.name && item.name.toLowerCase().includes(query);
-            const codeMatch = item.code && item.code.toLowerCase().includes(query);
-            const categoryMatch = item.category && item.category.toLowerCase().includes(query);
-            const keywordsMatch = Array.isArray(item.keywords) && item.keywords.some(k => k.toLowerCase().includes(query));
-            return nameMatch || codeMatch || categoryMatch || keywordsMatch;
-          });
-
-          renderCategoriesCatalog(filtered);
-          return;
-        }
-
-        // 4. По умолчанию выводим весь каталог
-        renderCategoriesCatalog(cachedWasteItems);
+        // 2. Рендерим каталог с учётом search/category из URL
+        renderCatalog();
 
       } catch (error) {
         console.error('Ошибка загрузки данных из БД:', error);
-        renderCategoriesCatalog([]);
+        renderCatalog();
       }
     }
 

@@ -1,12 +1,20 @@
 /**
  * Единый клиент для запросов к Django API.
- * Подключается обычным <script> до скриптов страниц.
+ * Локально (file:// или localhost) работает с dev-сервером Django,
+ * в остальных случаях использует относительный /api (его проксирует nginx).
  */
 
-const API_BASE_URL = 'http://127.0.0.1:8000/api';
+const isFileProtocol = window.location.protocol === 'file:';
+const isLocalHost = ['localhost', '127.0.0.1'].includes(window.location.hostname);
+const API_BASE_URL = (isFileProtocol || isLocalHost) ? 'http://127.0.0.1:8000/api' : '/api';
 
 async function apiRequest(path, params = {}) {
-  const url = new URL(`${API_BASE_URL}/${path}/`);
+  let url;
+  if (isFileProtocol) {
+    url = new URL(`${API_BASE_URL}/${path}/`);
+  } else {
+    url = new URL(`${API_BASE_URL}/${path}/`, window.location.origin);
+  }
 
   Object.entries(params).forEach(([key, value]) => {
     if (value !== undefined && value !== null && value !== '') {
@@ -24,6 +32,7 @@ async function apiRequest(path, params = {}) {
 }
 
 const EcoAPI = {
+  BASE_URL: API_BASE_URL,
   getWaste: (params) => apiRequest('waste', params),
   getWasteItem: (id) => apiRequest(`waste/${id}`),
   getPoints: (params) => apiRequest('points', params),
