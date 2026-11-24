@@ -4,7 +4,6 @@
 <head>
   <meta charset="UTF-8">
   <script>
-    // Мгновенная установка темы из localStorage до отрисовки страницы
     const savedTheme = localStorage.getItem('theme') || 'dark';
     document.documentElement.setAttribute('data-theme', savedTheme);
   </script>
@@ -13,7 +12,6 @@
   <link rel="stylesheet" href="style.css">
   
   <style>
-    /* Стили специально для каталога категорий по макету */
     .breadcrumbs {
       font-size: 0.85rem;
       color: var(--text-muted);
@@ -39,7 +37,6 @@
       margin-bottom: 28px;
     }
 
-    /* Поисковая строка */
     .catalog-search {
       display: flex;
       gap: 12px;
@@ -73,7 +70,6 @@
       border-color: var(--accent-light);
     }
 
-    /* Быстрый переход по категориям */
     .quick-categories {
       margin-bottom: 40px;
     }
@@ -104,7 +100,6 @@
       border-color: var(--accent-light);
     }
 
-    /* Сетка категорий (3 в ряд) */
     .categories-section-header {
       display: flex;
       justify-content: space-between;
@@ -132,9 +127,17 @@
         grid-template-columns: repeat(2, 1fr);
       }
     }
+
     @media (max-width: 640px) {
-      .category-blocks-grid {
-        grid-template-columns: 1fr;
+      .catalog-search {
+        flex-direction: column;
+        gap: 10px;
+      }
+      .catalog-search__input-wrapper {
+        width: 100%;
+      }
+      .catalog-search .btn {
+        width: 100%;
       }
     }
 
@@ -183,7 +186,6 @@
       color: var(--text-muted);
     }
 
-    /* Список предметов внутри блока категории */
     .cat-items-list {
       list-style: none;
       padding: 0;
@@ -225,7 +227,14 @@
         </span>
         <span class="logo__text">ЭкоГомель</span>
       </a>
-      <nav class="nav">
+      
+      <button class="burger" id="burger-btn" aria-label="Открыть меню">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+
+      <nav class="nav nav--collapsible" id="nav-menu">
         <a href="index.html" class="nav__link">Поиск</a>
         <a href="map.html" class="nav__link">Карта</a>
         <a href="about_project.html" class="nav__link">О проекте</a>
@@ -238,7 +247,6 @@
 
   <main class="container" style="padding-top: 30px; padding-bottom: 60px;">
     <div id="wasteContent">
-      <!-- Динамическое содержимое (Каталог / Карточка отхода / Результаты поиска) -->
       <p class="card__count">Загрузка каталога...</p>
     </div>
   </main>
@@ -264,7 +272,6 @@
   <script>
     const contentContainer = document.getElementById('wasteContent');
 
-    // Иконки для категорий по умолчанию (если категория совпадает по названию)
     const CATEGORY_ICONS = {
       'Пластик': 'plastic.svg',
       'Стекло': 'glass.svg',
@@ -286,11 +293,10 @@
         .replace(/'/g, '&#39;');
     }
 
-    let cachedWasteItems = []; // Кэш данных для фильтрации
+    let cachedWasteItems = [];
     let currentSearchQuery = '';
     let currentCategoryFilter = null;
 
-    // Фильтрация кэша по поисковому запросу
     function filterItemsBySearch(items, query) {
       const normalized = String(query || '').trim().toLowerCase();
       if (!normalized) return items;
@@ -304,7 +310,6 @@
       });
     }
 
-    // Состояние каталога в URL, чтобы фильтры переживали перезагрузку
     function syncCatalogUrl() {
       const params = new URLSearchParams();
       if (currentSearchQuery) params.set('search', currentSearchQuery);
@@ -312,9 +317,7 @@
       const queryString = params.toString();
       try {
         history.replaceState(null, '', queryString ? `waste.html?${queryString}` : 'waste.html');
-      } catch (error) {
-        // На file:// браузер может запрещать изменение URL — фильтры продолжат работать
-      }
+      } catch (error) {}
     }
 
     function renderCatalog() {
@@ -322,7 +325,6 @@
       renderCategoriesCatalog(searchedItems, currentCategoryFilter, currentSearchQuery);
     }
 
-    // ДИНАМИЧЕСКИЙ РЕНДЕР КАТЕГОРИЙ С ПОЛНОЙ ФИЛЬТРАЦИЕЙ
     function renderCategoriesCatalog(allWasteItems = [], activeCategoryFilter = null, searchQuery = '') {
       if (searchQuery) {
         document.title = `${searchQuery} — поиск — ЭкоГомель`;
@@ -330,7 +332,6 @@
         document.title = activeCategoryFilter ? `${activeCategoryFilter} — ЭкоГомель` : 'Все категории — ЭкоГомель';
       }
 
-      // 1. Собираем уникальные категории из базы
       const categoriesMap = {};
       
       allWasteItems.forEach(item => {
@@ -343,36 +344,31 @@
 
       const categoryNames = Object.keys(categoriesMap);
 
-      // Список категорий для чипов: активный фильтр должен оставаться видимым,
-      // даже если поиск не нашёл в нём совпадений
       const quickCategoryNames = activeCategoryFilter && !categoryNames.includes(activeCategoryFilter)
         ? [...categoryNames, activeCategoryFilter]
         : categoryNames;
 
-      // Кнопки-переключатели категорий
       const quickButtonsHtml = quickCategoryNames.map(catName => {
         const isActive = activeCategoryFilter === catName;
         return `<a href="#" class="quick-cat-btn ${isActive ? 'active' : ''}" data-category="${escapeHtml(catName)}" aria-pressed="${isActive}">${escapeHtml(catName)}</a>`;
       }).join('');
 
-      // Если активен фильтр по категории, оставляем только её блок
       const displayedCategories = activeCategoryFilter
         ? categoryNames.filter(cat => cat === activeCategoryFilter)
         : categoryNames;
 
-      // Генерируем карточки отфильтрованных категорий
       const categoryCardsHtml = displayedCategories.map(catName => {
         const items = categoriesMap[catName];
         const icon = CATEGORY_ICONS[catName] || 'plastic.svg';
 
+        // Убраны лишние пробелы
         const itemsListHtml = items.map(item => `
           <li>
             <a href="waste.html?id=${item.id}" class="cat-item-link">
               <span>${escapeHtml(item.name)}</span>
               <span class="arrow">&gt;</span>
             </a>
-          </li>
-        `).join('');
+          </li>`).join('');
 
         return `
           <div class="cat-block" id="cat-${catName}">
@@ -388,8 +384,7 @@
             <ul class="cat-items-list">
               ${itemsListHtml}
             </ul>
-          </div>
-        `;
+          </div>`;
       }).join('');
 
       const emptyMessage = searchQuery
@@ -433,7 +428,6 @@
         </div>
       `;
 
-      // Настройка локального поиска и переключателей категорий
       const searchInput = document.getElementById('catalogSearchInput');
       const searchBtn = document.getElementById('catalogSearchBtn');
       const doSearch = () => {
@@ -464,7 +458,6 @@
       }
     }
 
-    // Переключатель категории: повторный клик снимает фильтр
     function filterByCategory(categoryName) {
       currentCategoryFilter = currentCategoryFilter === categoryName ? null : categoryName;
       syncCatalogUrl();
@@ -472,7 +465,6 @@
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
-    // Рендер детальной карточки конкретного отхода
     function renderWasteDetail(item, points) {
       document.title = `${item.name} — ЭкоГомель`;
 
@@ -525,7 +517,6 @@
       `;
     }
 
-    // Главная инициализация страницы
     async function initWastePage() {
       const params = new URLSearchParams(window.location.search);
       const id = params.get('id');
@@ -535,7 +526,6 @@
       try {
         cachedWasteItems = await EcoAPI.getWaste().catch(() => []);
 
-        // 1. Если запрошен конкретный ID из базы
         if (id) {
           const item = cachedWasteItems.find(i => String(i.id) === String(id)) || await EcoAPI.getWasteItem(id).catch(() => null);
           if (item) {
@@ -545,7 +535,6 @@
           }
         }
 
-        // 2. Рендерим каталог с учётом search/category из URL
         renderCatalog();
 
       } catch (error) {
@@ -555,6 +544,26 @@
     }
 
     document.addEventListener('DOMContentLoaded', initWastePage);
+  </script>
+
+  <!-- СКРИПТ БУРГЕР-МЕНЮ -->
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const burgerBtn = document.getElementById('burger-btn');
+      const navMenu = document.getElementById('nav-menu');
+      if (burgerBtn && navMenu) {
+        burgerBtn.addEventListener('click', () => {
+          burgerBtn.classList.toggle('is-active');
+          navMenu.classList.toggle('is-open');
+        });
+        navMenu.querySelectorAll('.nav__link').forEach(link => {
+          link.addEventListener('click', () => {
+            burgerBtn.classList.remove('is-active');
+            navMenu.classList.remove('is-open');
+          });
+        });
+      }
+    });
   </script>
 </body>
 
