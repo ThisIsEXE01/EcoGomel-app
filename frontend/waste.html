@@ -129,6 +129,9 @@
     }
 
     @media (max-width: 640px) {
+      .category-blocks-grid {
+        grid-template-columns: 1fr;
+      }
       .catalog-search {
         flex-direction: column;
         gap: 10px;
@@ -228,7 +231,7 @@
         <span class="logo__text">ЭкоГомель</span>
       </a>
       
-      <button class="burger" id="burger-btn" aria-label="Открыть меню">
+      <button class="burger" id="burger-btn" aria-label="Открыть меню" aria-controls="nav-menu" aria-expanded="false">
         <span></span>
         <span></span>
         <span></span>
@@ -551,18 +554,36 @@
     document.addEventListener('DOMContentLoaded', () => {
       const burgerBtn = document.getElementById('burger-btn');
       const navMenu = document.getElementById('nav-menu');
-      if (burgerBtn && navMenu) {
-        burgerBtn.addEventListener('click', () => {
-          burgerBtn.classList.toggle('is-active');
-          navMenu.classList.toggle('is-open');
-        });
-        navMenu.querySelectorAll('.nav__link').forEach(link => {
-          link.addEventListener('click', () => {
-            burgerBtn.classList.remove('is-active');
-            navMenu.classList.remove('is-open');
-          });
-        });
-      }
+      if (!burgerBtn || !navMenu) return;
+
+      const setOpen = (open) => {
+        burgerBtn.classList.toggle('is-active', open);
+        navMenu.classList.toggle('is-open', open);
+        burgerBtn.setAttribute('aria-expanded', String(open));
+        burgerBtn.setAttribute('aria-label', open ? 'Закрыть меню' : 'Открыть меню');
+        document.body.classList.toggle('menu-open', open);
+      };
+
+      burgerBtn.addEventListener('click', () => {
+        setOpen(!navMenu.classList.contains('is-open'));
+      });
+
+      navMenu.querySelectorAll('.nav__link').forEach((link) => {
+        link.addEventListener('click', () => setOpen(false));
+      });
+
+      document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && navMenu.classList.contains('is-open')) {
+          setOpen(false);
+          burgerBtn.focus();
+        }
+      });
+
+      document.addEventListener('click', (event) => {
+        if (!navMenu.classList.contains('is-open')) return;
+        if (navMenu.contains(event.target) || burgerBtn.contains(event.target)) return;
+        setOpen(false);
+      });
     });
   </script>
 </body>
