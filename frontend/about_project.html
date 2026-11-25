@@ -4,7 +4,6 @@
 <head>
   <meta charset="UTF-8">
   <script>
-    // Мгновенная установка темы из localStorage до отрисовки страницы
     const savedTheme = localStorage.getItem('theme') || 'dark';
     document.documentElement.setAttribute('data-theme', savedTheme);
   </script>
@@ -24,7 +23,14 @@
         </span>
         <span class="logo__text">ЭкоГомель</span>
       </a>
-      <nav class="nav">
+      
+      <button class="burger" id="burger-btn" aria-label="Открыть меню" aria-controls="nav-menu" aria-expanded="false">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+
+      <nav class="nav nav--collapsible" id="nav-menu">
         <a href="index.html" class="nav__link">Поиск</a>
         <a href="map.html" class="nav__link">Карта</a>
         <a href="about_project.html" class="nav__link active">О проекте</a>
@@ -54,20 +60,26 @@
       <h2 class="section-title">Как это работает</h2>
       <div class="cards-grid">
         <div class="card card--step">
-          <div class="step-badge">1</div>
-          <h3 class="card__title">Найдите предмет</h3>
+          <div class="card__header-row">
+            <div class="step-badge">1</div>
+            <h3 class="card__title">Найдите предмет</h3>
+          </div>
           <p class="card__text">Просто введите название предмета в поисковой строке или выберите код маркировки для
             мгновенной справки.</p>
         </div>
         <div class="card card--step">
-          <div class="step-badge">2</div>
-          <h3 class="card__title">Узнайте правила</h3>
+          <div class="card__header-row">
+            <div class="step-badge">2</div>
+            <h3 class="card__title">Узнайте правила</h3>
+          </div>
           <p class="card__text">Получите детальную пошаговую инструкцию по правильной подготовке отхода к безопасной и
             эффективной сдаче.</p>
         </div>
         <div class="card card--step">
-          <div class="step-badge">3</div>
-          <h3 class="card__title">Сдайте на переработку</h3>
+          <div class="card__header-row">
+            <div class="step-badge">3</div>
+            <h3 class="card__title">Сдайте на переработку</h3>
+          </div>
           <p class="card__text">Определите наиболее удобный специализированный пункт сбора на нашей интерактивной карте
             города.</p>
         </div>
@@ -88,7 +100,6 @@
             обществе, помогая каждому горожанину сделать свой первый вклад в экологическую безопасность.
           </p>
         </div>
-        <!-- Убрана рамка через инлайн-стили background и border -->
         <div class="mission-image-wrapper" style="background: transparent; border: none; box-shadow: none;">
           <img src="eco_image.png" alt="Инфографика EcoCity: переработка, зелёная энергия и экотранспорт" class="mission-image" style="max-width: 85%; display: block; margin: 0 auto;">
         </div>
@@ -98,7 +109,7 @@
     <!-- СЕКЦИЯ: В ЦИФРАХ -->
     <section class="section container">
       <h2 class="section-title">В цифрах</h2>
-      <div class="cards-grid">
+      <div class="cards-grid cards-grid--stats">
         <div class="card card--stat">
           <span class="stat-number">1</span>
           <span class="stat-label">предметов в базе</span>
@@ -129,7 +140,6 @@
     <!-- СЕКЦИЯ: КОНТАКТЫ И ОБРАТНАЯ СВЯЗЬ -->
     <section class="section container">
       <div class="contacts-grid">
-        <!-- Левая колонка: Контакты -->
         <div class="contacts-info">
           <h2 class="section-title">Контакты</h2>
           <p class="contacts-desc">
@@ -142,7 +152,6 @@
           </div>
         </div>
 
-        <!-- Правая колонка: Форма обратной связи -->
         <div class="feedback-card">
           <h3 class="feedback-title">Обратная связь</h3>
           <form class="feedback-form">
@@ -216,8 +225,9 @@
   </footer>
 
   <script src="theme.js"></script>
+
   <script>
-    // Скрипт управления модальным окном волонтёра
+    // Модалка волонтера
     document.addEventListener('DOMContentLoaded', () => {
       const modal = document.getElementById('volunteer-modal');
       const openBtn = document.getElementById('open-volunteer-modal');
@@ -233,26 +243,55 @@
         document.body.style.overflow = '';
       };
 
-      if (openBtn && modal) {
-        openBtn.addEventListener('click', openModal);
-      }
+      if (openBtn && modal) openBtn.addEventListener('click', openModal);
+      if (closeBtn && modal) closeBtn.addEventListener('click', closeModal);
 
-      if (closeBtn && modal) {
-        closeBtn.addEventListener('click', closeModal);
-      }
-
-      // Закрытие при клике вне карточки (по подложке)
       window.addEventListener('click', (event) => {
-        if (event.target === modal) {
-          closeModal();
-        }
+        if (event.target === modal) closeModal();
       });
 
-      // Закрытие по Escape
       document.addEventListener('keydown', (event) => {
         if (event.key === 'Escape' && modal && modal.style.display !== 'none') {
           closeModal();
         }
+      });
+    });
+  </script>
+
+  <!-- СКРИПТ БУРГЕР-МЕНЮ -->
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const burgerBtn = document.getElementById('burger-btn');
+      const navMenu = document.getElementById('nav-menu');
+      if (!burgerBtn || !navMenu) return;
+
+      const setOpen = (open) => {
+        burgerBtn.classList.toggle('is-active', open);
+        navMenu.classList.toggle('is-open', open);
+        burgerBtn.setAttribute('aria-expanded', String(open));
+        burgerBtn.setAttribute('aria-label', open ? 'Закрыть меню' : 'Открыть меню');
+        document.body.classList.toggle('menu-open', open);
+      };
+
+      burgerBtn.addEventListener('click', () => {
+        setOpen(!navMenu.classList.contains('is-open'));
+      });
+
+      navMenu.querySelectorAll('.nav__link').forEach((link) => {
+        link.addEventListener('click', () => setOpen(false));
+      });
+
+      document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && navMenu.classList.contains('is-open')) {
+          setOpen(false);
+          burgerBtn.focus();
+        }
+      });
+
+      document.addEventListener('click', (event) => {
+        if (!navMenu.classList.contains('is-open')) return;
+        if (navMenu.contains(event.target) || burgerBtn.contains(event.target)) return;
+        setOpen(false);
       });
     });
   </script>
