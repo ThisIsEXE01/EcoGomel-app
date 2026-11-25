@@ -83,31 +83,31 @@
     <!-- ДВУХКОЛОНОЧНЫЙ МАКЕТ (Пример карточки отхода + пункты / Карта) -->
     <section class="content-layout container">
       <div class="main-content">
-  <div class="info-card">
-    <div class="info-card__header">
-      <h2>Главные правила сортировки</h2>
-      <div class="badges">
-        <span class="badge badge--success">Памятка</span>
+        <div class="info-card">
+          <div class="info-card__header">
+            <h2>Главные правила сортировки</h2>
+            <div class="badges">
+              <span class="badge badge--success">Памятка</span>
+            </div>
+          </div>
+          <p class="info-card__desc">Простые шаги, которые делают вторичное сырьё пригодным для переработки.</p>
+        </div>
+
+        <div class="info-card">
+          <h3>4 золотых правила</h3>
+          <ul class="steps-list">
+            <li><span class="step-num">1</span> <b>Очищайте:</b> Сдавайте тару без остатков еды и жидкостей</li>
+            <li><span class="step-num">2</span> <b>Уменьшайте объём:</b> Сминайте коробки, ПЭТ-бутылки и алюминиевые банки</li>
+            <li><span class="step-num">3</span> <b>Опасное — отдельно:</b> Батарейки, градусники и лампы несите только в спецпункты</li>
+            <li><span class="step-num">4</span> <b>Смотрите код:</b> Проверяйте маркировку на дне или этикетке товара</li>
+          </ul>
+        </div>
+
+        <div class="info-card">
+          <h3>Зачем это нужно?</h3>
+          <p class="info-card__desc">Чистые и правильно отсортированные отходы отправляются напрямую на заводы Гомельщины, минуя полигоны ТБО.</p>
+        </div>
       </div>
-    </div>
-    <p class="info-card__desc">Простые шаги, которые делают вторичное сырьё пригодным для переработки.</p>
-  </div>
-
-  <div class="info-card">
-    <h3>4 золотых правила</h3>
-    <ul class="steps-list">
-      <li><span class="step-num">1</span> <b>Очищайте:</b> Сдавайте тару без остатков еды и жидкостей</li>
-      <li><span class="step-num">2</span> <b>Уменьшайте объём:</b> Сминайте коробки, ПЭТ-бутылки и алюминиевые банки</li>
-      <li><span class="step-num">3</span> <b>Опасное — отдельно:</b> Батарейки, градусники и лампы несите только в спецпункты</li>
-      <li><span class="step-num">4</span> <b>Смотрите код:</b> Проверяйте маркировку на дне или этикетке товара</li>
-    </ul>
-  </div>
-
-  <div class="info-card">
-    <h3>Зачем это нужно?</h3>
-    <p class="info-card__desc">Чистые и правильно отсортированные отходы отправляются напрямую на заводы Гомельщины, минуя полигоны ТБО.</p>
-  </div>
-</div>
 
       <!-- Боковая панель с пунктами приема -->
       <aside class="sidebar">
@@ -202,7 +202,11 @@
         try {
           const data = await EcoAPI.getPoints();
           allPoints = data.results ? data.results : data;
-          requestLocation();
+          
+          // НЕ ЗАПРАШИВАЕМ ГЕОЛОКАЦИЮ АВТОМАТИЧЕСКИ
+          // Вместо этого показываем плашку и все точки
+          handleLocationError(); 
+          
         } catch (error) {
           console.error('Ошибка загрузки точек:', error);
           container.innerHTML = '<p style="color: #ef4444;">Не удалось загрузить данные.</p>';
@@ -348,7 +352,6 @@
 
           // Логика кнопок
           if (!isExpanded && pointsArray.length > limit) {
-            // Если свернут и точек больше лимита — показываем "Показать все"
             const btnHTML = `
               <button id="showAllBtn" class="btn btn--outline" style="width: 100%; margin-top: 8px; font-size: 0.85rem;">
                 Показать все (${pointsArray.length})
@@ -361,7 +364,6 @@
               renderItems();
             });
           } else if (isExpanded) {
-            // Если развернут — показываем кнопку "Свернуть"
             const btnHTML = `
               <button id="collapseBtn" class="btn btn--outline" style="width: 100%; margin-top: 8px; font-size: 0.85rem;">
                 Свернуть
@@ -415,19 +417,14 @@
       return `${count} ${word} отходов`;
     }
 
-function renderCategoryCards(waste) {
+    function renderCategoryCards(waste) {
       const container = document.getElementById('categoriesGrid');
       if (!container) return;
       
       container.innerHTML = CATEGORY_CARDS.map(({ category, icon }) => {
-        // Считаем количество элементов данной категории из базы
         const categoryItems = waste.filter((item) => item.category === category);
         const count = categoryItems.length;
-        
-        // Ссылка теперь ведет в каталог с установленным параметром search по названию категории
         const targetHref = `waste.html?category=${encodeURIComponent(category)}`;
-        
-        // В подписи выводим общее количество видов
         const subText = wasteCountLabel(count);
 
         return `
@@ -455,7 +452,7 @@ function renderCategoryCards(waste) {
       }).join('');
     }
 
-async function renderWasteSections() {
+    async function renderWasteSections() {
       try {
         const waste = await EcoAPI.getWaste();
         renderCategoryCards(waste);
@@ -483,7 +480,6 @@ async function renderWasteSections() {
         try {
           const allWaste = await EcoAPI.getWaste();
           
-          // Полнотекстовый поиск по полям name, code, category и keywords
           const foundList = allWaste.filter(item => {
             const nameMatch = item.name && item.name.toLowerCase().includes(query);
             const codeMatch = item.code && item.code.toLowerCase().includes(query);
