@@ -66,6 +66,7 @@ python manage.py runserver
 - `ImproperlyConfigured: DJANGO_SECRET_KEY is required when DJANGO_DEBUG=False` — нет `backend/.env`. Скопируйте `.env.example` в `.env` (см. блок выше).
 - `ModuleNotFoundError: No module named 'dotenv'` или `'whitenoise'` — не установлены зависимости. Активируйте venv и выполните `pip install -r requirements.txt`.
 - `DisallowedHost` — проверьте `DJANGO_ALLOWED_HOSTS` в `backend/.env`.
+- После `migrate` база пустая, нет отходов и пунктов приёма — данные не импортированы. Выполните `python manage.py import_waste` и `python manage.py import_dropoff_points` (или `bash deploy/update.sh`). Файл `db.sqlite3` не хранится в git, поэтому в новом клоне база всегда создаётся пустой.
 
 ### 2. Клиент (Frontend):
 Бэкенд должен быть запущен. Можно открыть `frontend/index.html` в браузере или тот же сайт через Django: `http://localhost:8000/` — WhiteNoise раздаёт папку `frontend/` с корня.
