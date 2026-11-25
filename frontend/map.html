@@ -105,11 +105,12 @@
       color: var(--logo-color);
       font-weight: 700;
       font-size: 1.2rem;
+      white-space: nowrap;
     }
     
     .logo__icon img {
-      width: 32px;
-      height: 32px;
+      width: 52px;
+      height: 52px;
       object-fit: contain;
       display: block;
     }
@@ -118,6 +119,7 @@
       display: flex;
       align-items: center;
       gap: 24px;
+      white-space: nowrap;
     }
 
     .nav__link {
@@ -195,12 +197,16 @@
       outline: none;
     }
 
+    .filters-wrapper {
+      position: relative;
+      border-bottom: 1px solid var(--border-color);
+    }
+
     .filters {
       padding: 12px 14px;
       display: flex;
       flex-wrap: wrap;
       gap: 6px;
-      border-bottom: 1px solid var(--border-color);
     }
 
     .filters button {
@@ -212,6 +218,7 @@
       font-size: 0.8rem;
       cursor: pointer;
       transition: 0.2s;
+      white-space: nowrap;
     }
 
     .filters button:hover {
@@ -225,7 +232,6 @@
       border-color: var(--accent-green);
     }
 
-    /* Сетка 2 на 2 для кнопок */
     .actions {
       padding: 10px 14px;
       display: grid;
@@ -341,8 +347,12 @@
     /* ==================== 8. МОБИЛЬНАЯ ВЕРСИЯ ==================== */
     @media (max-width: 800px) {
       .header__container { height: 60px; }
-      .nav { gap: 15px; }
-      .nav__link { font-size: 0.85rem; }
+      .logo__icon img { width: 32px; height: 32px; }
+      .logo { font-size: 1rem; gap: 5px; }
+      .nav { gap: 10px; }
+      .nav__link { font-size: 0.75rem; }
+      .theme-toggle { padding: 4px 6px; }
+      .theme-toggle img { width: 16px; height: 16px; }
       
       .main-layout { height: calc(100vh - 60px); position: relative; display: block; }
 
@@ -353,9 +363,35 @@
       .sidebar-top { pointer-events: auto; background: var(--bg-card); border-radius: 0 0 16px 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); flex-shrink: 0; z-index: 2; }
 
       .search-box { padding: 10px 14px; }
+      
       .filters { padding: 10px 14px; flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; }
       .filters::-webkit-scrollbar { display: none; }
-      .filters button { white-space: nowrap; }
+      
+      /* УЛУЧШЕННЫЕ ТЕНИ С ДВУХ СТОРОН */
+      .filters-wrapper::before, .filters-wrapper::after {
+        content: ''; 
+        position: absolute; 
+        top: 0; 
+        bottom: 0; 
+        width: 45px; /* Увеличена ширина */
+        pointer-events: none; 
+        z-index: 2; 
+        transition: opacity 0.3s ease; 
+        opacity: 0;
+      }
+      /* Градиент сделан серым/полупрозрачным, чтобы было видно на любом фоне */
+      .filters-wrapper::before { 
+        left: 0; 
+        background: linear-gradient(to right, rgba(100, 116, 139, 0.3) 0%, transparent 100%); 
+      }
+      .filters-wrapper::after { 
+        right: 0; 
+        background: linear-gradient(to left, rgba(100, 116, 139, 0.3) 0%, transparent 100%); 
+      }
+      
+      .filters-wrapper.show-left::before { opacity: 1; }
+      .filters-wrapper.show-right::after { opacity: 1; }
+
       .actions { padding: 10px 14px; gap: 8px; }
       .actions button { padding: 10px 8px; font-size: 0.8rem; }
 
@@ -393,21 +429,23 @@
           <input type="text" id="searchInput" placeholder="Поиск пункта или адреса" />
         </div>
 
-        <div class="filters" id="filtersContainer">
-          <button class="active" data-filter="all">Все</button>
-          <button data-filter="Пластик">Пластик</button>
-          <button data-filter="Стекло">Стекло</button>
-          <button data-filter="Макулатура">Макулатура</button>
-          <button data-filter="Батарейки">Батарейки</button>
-          <button data-filter="Электроника">Электроника</button>
-          <button data-filter="Металлолом">Металлолом</button>
+        <div class="filters-wrapper" id="filtersWrapper">
+          <div class="filters" id="filtersContainer">
+            <button class="active" data-filter="all">Все</button>
+            <button data-filter="Пластик">Пластик</button>
+            <button data-filter="Стекло">Стекло</button>
+            <button data-filter="Макулатура">Макулатура</button>
+            <button data-filter="Батарейки">Батарейки</button>
+            <button data-filter="Электроника">Электроника</button>
+            <button data-filter="Металлолом">Металлолом</button>
+          </div>
         </div>
 
         <div class="actions">
           <button id="geoBtn" title="Моё местоположение">📍 Я здесь</button>
           <button id="nearestBtn" title="Радиус 3 км">🎯 До 3 км</button>
-          <button id="addModeBtn">➕ Добавить</button>
-          <button id="clearAllBtn">🗑 Удалить все</button>
+          <button id="addModeBtn" style="display: none;">➕ Добавить</button>
+          <button id="clearAllBtn" style="display: none;">🗑 Удалить все</button>
         </div>
 
         <button id="toggleListBtn">Показать список пунктов</button>
@@ -481,7 +519,7 @@
        ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ И НАСТРОЙКИ API
        ============================================================ */
     const NEAREST_RADIUS = 3000; 
-    const API_POINTS_URL = `${API_BASE_URL}/points/`; // Базовый URL из api.js
+    const API_POINTS_URL = `${API_BASE_URL}/points/`;
 
     let points = [];
     const markerMap = {};
@@ -584,7 +622,6 @@
       }
     }
 
-    // Функция для вызова из попапа маркера
     window.deletePoint = async function(id) {
       if (!confirm('Вы уверены, что хотите удалить эту точку?')) return;
       await deletePointFromAPI(id);
@@ -668,7 +705,14 @@
         card.addEventListener('click', () => {
           if (markerMap[p.id]) {
             markerMap[p.id].openPopup();
-            map.setView([p.latitude, p.longitude], 16);
+            
+            // ЦЕНТРИРОВАНИЕ С ОТСТУПОМ (маркер ниже центра на ~200px)
+            const targetZoom = 16;
+            const latlng = L.latLng(p.latitude, p.longitude);
+            const point = map.project(latlng, targetZoom);
+            point.y -= 200; 
+            const newCenter = map.unproject(point, targetZoom);
+            map.setView(newCenter, targetZoom);
           }
           highlightCard(p.id);
           if (window.innerWidth <= 800) {
@@ -770,7 +814,6 @@
       btn.disabled = true;
 
       try {
-        // Удаляем каждую точку через API
         for (const p of points) {
           await fetch(`${API_POINTS_URL}${p.id}/`, { method: 'DELETE' });
         }
@@ -814,9 +857,47 @@
       syncMarkers();
     });
 
+    // РАСКРЫТИЕ СПИСКА ПРИ ФОКУСЕ НА ПОИСК
+    document.getElementById('searchInput').addEventListener('focus', () => {
+      if (window.innerWidth <= 800 && !listEl.classList.contains('open')) {
+        listEl.classList.add('open');
+        toggleListBtn.textContent = 'Скрыть список';
+      }
+    });
+
     toggleListBtn.addEventListener('click', () => {
       listEl.classList.toggle('open');
+      if (listEl.classList.contains('open')) {
+        toggleListBtn.textContent = 'Скрыть список';
+      } else {
+        toggleListBtn.textContent = `Показать список пунктов (${points.length})`;
+      }
     });
+
+    // ГРАДИЕНТНЫЕ ТЕНИ ДЛЯ ФИЛЬТРОВ
+    const filtersWrapper = document.getElementById('filtersWrapper');
+    const filtersContainer = document.getElementById('filtersContainer');
+
+    function updateFilterShadows() {
+      if (!filtersContainer || !filtersWrapper) return;
+      if (window.innerWidth > 800) { 
+        filtersWrapper.classList.remove('show-left', 'show-right');
+        return;
+      }
+      const scrollLeft = filtersContainer.scrollLeft;
+      const scrollWidth = filtersContainer.scrollWidth;
+      const clientWidth = filtersContainer.clientWidth;
+      
+      if (scrollLeft > 0) filtersWrapper.classList.add('show-left');
+      else filtersWrapper.classList.remove('show-left');
+      
+      if (scrollLeft + clientWidth < scrollWidth - 2) filtersWrapper.classList.add('show-right');
+      else filtersWrapper.classList.remove('show-right');
+    }
+
+    filtersContainer.addEventListener('scroll', updateFilterShadows);
+    window.addEventListener('resize', updateFilterShadows);
+    setTimeout(updateFilterShadows, 200); 
 
     /* ============================================================
        7. ГЕОЛОКАЦИЯ
