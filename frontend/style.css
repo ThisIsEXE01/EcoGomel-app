@@ -51,6 +51,7 @@ body {
   color: var(--text-main);
   line-height: 1.5;
   transition: background-color 0.3s ease, color 0.3s ease;
+  overflow-x: hidden; /* Фикс горизонтального скролла */
 }
 
 .container {
@@ -345,7 +346,6 @@ a.card {
   height: 28px;
   object-fit: contain;
   display: block;
-
 }
 
 /* iron.svg нарисован светло-серым под тёмную тему. */
@@ -386,17 +386,26 @@ a.card {
 
 .info-card__header {
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
   align-items: center;
+  gap: 12px;
   margin-bottom: 12px;
+}
+
+.info-card__header h1 {
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .badges {
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
 }
 
 .badge {
+  max-width: 100%;
   padding: 4px 10px;
   border-radius: 20px;
   font-size: 0.75rem;
@@ -438,6 +447,7 @@ a.card {
   justify-content: center;
   font-size: 0.8rem;
   font-weight: 700;
+  flex-shrink: 0;
 }
 
 /* Sidebar & Map */
@@ -558,7 +568,8 @@ a.card {
 
 /* ==================== 7. СТРАНИЦА «О ПРОЕКТЕ» ==================== */
 .section {
-  padding: 30px 0;
+  padding-top: 30px;
+  padding-bottom: 30px;
 }
 
 .section-title {
@@ -621,13 +632,23 @@ a.card {
   justify-content: center;
   font-weight: 700;
   font-size: 1rem;
-  margin-bottom: 8px;
 }
 
 .card__text {
   color: var(--text-muted);
   font-size: 0.88rem;
   line-height: 1.5;
+}
+
+/* Обертка для шага и заголовка */
+.card__header-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+.card__header-row .card__title {
+  margin: 0;
 }
 
 .mission-grid {
@@ -797,31 +818,106 @@ a.card {
   margin-top: 8px;
 }
 
-/* ==================== 8. АДАПТИВНОСТЬ (RESPONSIVE) ==================== */
+/* ==================== 8. БУРГЕР-МЕНЮ ==================== */
+.burger {
+  display: none;
+  flex-direction: column;
+  justify-content: space-between;
+  width: 24px;
+  height: 18px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  z-index: 1001;
+  padding: 0;
+}
+
+.burger span {
+  width: 100%;
+  height: 2px;
+  background-color: var(--text-main);
+  transition: all 0.3s ease;
+  border-radius: 2px;
+}
+
+.burger.is-active span:nth-child(1) {
+  transform: translateY(8px) rotate(45deg);
+}
+.burger.is-active span:nth-child(2) {
+  opacity: 0;
+}
+.burger.is-active span:nth-child(3) {
+  transform: translateY(-8px) rotate(-45deg);
+}
+
+/* Блокировка скролла страницы при открытом мобильном меню. */
+body.menu-open {
+  overflow: hidden;
+}
+
+/* ==================== 9. АДАПТИВНОСТЬ ==================== */
 @media (max-width: 900px) {
   .cards-grid {
     grid-template-columns: repeat(2, 1fr);
   }
-
+  .cards-grid--stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .cards-grid--stats .card--stat:last-child {
+    grid-column: 1 / -1;
+  }
+  .card--stat {
+    padding: 24px 16px;
+  }
+  .stat-number {
+    font-size: 2.2rem;
+  }
   .content-layout {
     grid-template-columns: 1fr;
   }
 }
 
 @media (max-width: 850px) {
-
   .mission-grid,
   .contacts-grid {
     grid-template-columns: 1fr;
     gap: 24px;
   }
-
   .team-banner {
     padding: 24px;
   }
-
   .about-hero__title {
     font-size: 2rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .burger {
+    display: flex;
+  }
+  .nav--collapsible {
+    position: fixed;
+    top: 70px;
+    left: 0;
+    width: 100%;
+    background-color: var(--bg-card);
+    flex-direction: column;
+    padding: 20px;
+    box-shadow: 0 10px 15px rgba(0,0,0,0.1);
+    transform: translateY(-150%);
+    transition: transform 0.3s ease;
+    z-index: 1000;
+    gap: 16px;
+    border-bottom: 1px solid var(--border-color);
+  }
+  .nav--collapsible.is-open {
+    transform: translateY(0);
+  }
+  .nav--collapsible .nav__link {
+    font-size: 1.1rem;
+    width: 100%;
+    text-align: center;
+    padding: 8px 0;
   }
 }
 
@@ -829,20 +925,74 @@ a.card {
   .hero__title {
     font-size: 1.8rem;
   }
-
   .cards-grid {
     grid-template-columns: 1fr;
   }
-
+  
+  /* Поисковая строка на главной */
   .search-bar {
-    flex-direction: column;
+    flex-direction: column; /* Ставим в колонку */
     gap: 10px;
+    padding: 10px;
+    background: transparent; /* Убираем фон у всей строки */
+    border: none;
+  }
+  
+  /* Стили для поля ввода на мобилке */
+  .search-bar__input {
+    width: 100%;
+    background-color: var(--bg-input);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    padding: 12px 16px;
   }
 
-  .btn {
+  /* Иконку поиска прячем, так как она мешает */
+  .search-bar__icon {
+    display: none;
+  }
+
+  /* Кнопка на мобилке */
+  .search-bar .btn {
     width: 100%;
   }
+  
+  .cards-grid--stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .cards-grid--stats .card--stat:last-child {
+    grid-column: 1 / -1;
+  }
+  .card--stat {
+    padding: 16px 12px;
+  }
+  .stat-number {
+    font-size: 1.8rem;
+  }
 }
+
+@media (max-width: 400px) {
+  .header__container {
+    padding: 0 10px;
+    height: 60px;
+  }
+  .logo img {
+    width: 36px;
+    height: 36px;
+  }
+  .logo {
+    font-size: 1rem;
+  }
+  .theme-toggle {
+    padding: 4px 8px;
+  }
+  .theme-toggle img {
+    width: 16px;
+    height: 16px;
+  }
+}
+
+
 
 /* MVP: админские элементы скрыты до релиза админки. */
 [data-admin-only] {
