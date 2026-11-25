@@ -154,7 +154,7 @@
 
         <div class="feedback-card">
           <h3 class="feedback-title">Обратная связь</h3>
-          <form class="feedback-form">
+          <form class="feedback-form" id="feedback-form">
             <div class="form-group">
               <label class="form-label">Имя</label>
               <input type="text" placeholder="Как к вам обращаться" class="form-input">
@@ -168,6 +168,7 @@
               <textarea placeholder="Ваше предложение или вопрос..." class="form-textarea" rows="4"></textarea>
             </div>
             <button type="submit" class="btn btn--primary btn--full">Отправить</button>
+            <p class="form-status" role="status" aria-live="polite" hidden></p>
           </form>
         </div>
       </div>
@@ -182,7 +183,7 @@
       <p class="contacts-desc" style="text-align: center; margin-bottom: 1.5rem;">
         Заполните анкету, и мы свяжемся с вами для участия в экологических инициативах Гомеля.
       </p>
-      <form class="feedback-form">
+      <form class="feedback-form" id="volunteer-form">
         <div class="form-group">
           <label class="form-label">Ваше имя</label>
           <input type="text" name="name" placeholder="Введите ваше имя" class="form-input" required>
@@ -205,6 +206,7 @@
           </select>
         </div>
         <button type="submit" class="btn btn--primary btn--full">Отправить заявку</button>
+        <p class="form-status" role="status" aria-live="polite" hidden></p>
       </form>
     </div>
   </div>
@@ -254,6 +256,19 @@
         if (event.key === 'Escape' && modal && modal.style.display !== 'none') {
           closeModal();
         }
+      });
+
+      // MVP: формы ещё не подключены к API — показываем статус вместо отправки.
+      document.querySelectorAll('.feedback-form').forEach((form) => {
+        form.addEventListener('submit', (event) => {
+          event.preventDefault();
+          const status = form.querySelector('.form-status');
+          if (!status) return;
+          status.textContent = form.id === 'volunteer-form'
+            ? 'Запись волонтёров появится в релизной версии. Следите за обновлениями.'
+            : 'Форма обратной связи появится в релизной версии.';
+          status.hidden = false;
+        });
       });
     });
   </script>
