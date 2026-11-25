@@ -32,6 +32,18 @@
 
 ## 🚀 Как запустить проект
 
+> ⚠️ **Важно:** для запуска сервера теперь нужен файл `backend/.env`. Без него `runserver` падает с ошибкой `ImproperlyConfigured: DJANGO_SECRET_KEY is required when DJANGO_DEBUG=False`.
+>
+> ```bash
+> # Windows
+> copy backend\.env.example backend\.env
+>
+> # Linux/macOS
+> cp backend/.env.example backend/.env
+> ```
+>
+> Для локальной разработки в примере уже включён `DJANGO_DEBUG=True`, править ничего не нужно.
+
 ### 1. Сервер (Backend):
 ```bash
 cd backend
@@ -39,8 +51,6 @@ python -m venv .venv
 .\.venv\Scripts\activate
 pip install -r requirements.txt
 ```
-
-Скопируйте `backend/.env.example` в `backend/.env` и при необходимости поправьте значения. Для локальной разработки в примере уже включён `DJANGO_DEBUG=True`.
 
 ```bash
 python manage.py migrate
@@ -50,6 +60,13 @@ python manage.py runserver
 ```
 
 Бэкенд будет доступен по адресу `http://localhost:8000`, API — по префиксу `/api/`.
+
+### Если сервер не запускается
+
+- `ImproperlyConfigured: DJANGO_SECRET_KEY is required when DJANGO_DEBUG=False` — нет `backend/.env`. Скопируйте `.env.example` в `.env` (см. блок выше).
+- `ModuleNotFoundError: No module named 'dotenv'` или `'whitenoise'` — не установлены зависимости. Активируйте venv и выполните `pip install -r requirements.txt`.
+- `DisallowedHost` — проверьте `DJANGO_ALLOWED_HOSTS` в `backend/.env`.
+- После `migrate` база пустая, нет отходов и пунктов приёма — данные не импортированы. Выполните `python manage.py import_waste` и `python manage.py import_dropoff_points` (или `bash deploy/update.sh`). Файл `db.sqlite3` не хранится в git, поэтому в новом клоне база всегда создаётся пустой.
 
 ### 2. Клиент (Frontend):
 Бэкенд должен быть запущен. Можно открыть `frontend/index.html` в браузере или тот же сайт через Django: `http://localhost:8000/` — WhiteNoise раздаёт папку `frontend/` с корня.
