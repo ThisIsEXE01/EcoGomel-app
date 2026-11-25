@@ -386,17 +386,26 @@ a.card {
 
 .info-card__header {
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
   align-items: center;
+  gap: 12px;
   margin-bottom: 12px;
+}
+
+.info-card__header h1 {
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .badges {
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
 }
 
 .badge {
+  max-width: 100%;
   padding: 4px 10px;
   border-radius: 20px;
   font-size: 0.75rem;
@@ -559,7 +568,8 @@ a.card {
 
 /* ==================== 7. СТРАНИЦА «О ПРОЕКТЕ» ==================== */
 .section {
-  padding: 30px 0;
+  padding-top: 30px;
+  padding-bottom: 30px;
 }
 
 .section-title {
@@ -840,10 +850,27 @@ a.card {
   transform: translateY(-8px) rotate(-45deg);
 }
 
+/* Блокировка скролла страницы при открытом мобильном меню. */
+body.menu-open {
+  overflow: hidden;
+}
+
 /* ==================== 9. АДАПТИВНОСТЬ ==================== */
 @media (max-width: 900px) {
   .cards-grid {
     grid-template-columns: repeat(2, 1fr);
+  }
+  .cards-grid--stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .cards-grid--stats .card--stat:last-child {
+    grid-column: 1 / -1;
+  }
+  .card--stat {
+    padding: 24px 16px;
+  }
+  .stat-number {
+    font-size: 2.2rem;
   }
   .content-layout {
     grid-template-columns: 1fr;
@@ -931,13 +958,16 @@ a.card {
   }
   
   .cards-grid--stats {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .cards-grid--stats .card--stat:last-child {
+    grid-column: 1 / -1;
   }
   .card--stat {
-    padding: 20px;
+    padding: 16px 12px;
   }
   .stat-number {
-    font-size: 2rem;
+    font-size: 1.8rem;
   }
 }
 
