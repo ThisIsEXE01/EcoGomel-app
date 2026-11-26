@@ -1,8 +1,16 @@
+from decimal import Decimal, InvalidOperation
+import json
+
+from django.core.cache import cache
+from django.core.exceptions import ValidationError
+from django.core.validators import validate_email
 from django.db.models import Q
 from django.http import JsonResponse
+from django.utils import timezone
+from django.views.decorators.http import require_POST
 import pymorphy3
 
-from .models import DropoffPoint, WasteItem
+from .models import DropoffPoint, PointSuggestion, WasteItem
 
 morph = pymorphy3.MorphAnalyzer()
 
@@ -23,14 +31,14 @@ def get_word_lemmas(text: str) -> list[set[str]]:
     parsed = morph.parse(clean_word)
 
     if parsed:
-        p = parsed[0]
-        nf = p.normal_form.lower()
-        variants.add(nf)
+      p = parsed[0]
+      nf = p.normal_form.lower()
+      variants.add(nf)
 
-        for form in p.lexeme:
-            fw = form.word.lower()
-            variants.add(fw)
-            variants.add(fw.capitalize())
+      for form in p.lexeme:
+        fw = form.word.lower()
+        variants.add(fw)
+        variants.add(fw.capitalize())
 
     term_groups.append(variants)
 
@@ -174,4 +182,211 @@ def points_list(request):
   data = [point_to_dict(point) for point in queryset]
   return JsonResponse(
       data, safe=False, json_dumps_params={'ensure_ascii': False}
+  )
+
+
+def _get_client_ip(request) -> str:
+  forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+  if forwarded_for:
+    return forwarded_for.split(',')[0].strip()
+  return request.META.get('REMOTE_ADDR', '0.0.0.0')
+
+
+def _parse_coordinate(raw_value, field_name: str, min_val: int, max_val: int):
+  if raw_value is None or raw_value == '':
+    return None
+  try:
+    value = Decimal(str(raw_value))
+  except (InvalidOperation, TypeError, ValueError):
+    raise ValueError(f'Поле «{field_name}» должно быть числом.')
+  if not (min_val <= value <= max_val):
+    raise ValueError(
+        f'Поле «{field_name}» должно быть в диапазоне от {min_val} до {max_val}.'
+    )
+  return value
+
+
+def _validate_suggestion_payload(data: dict) -> tuple[dict, dict]:
+  errors = {}
+
+  # Скрытое поле-ловушка (honeypot) для защиты от ботов
+  honeypot = str(data.get('website', '') or '').strip()
+  if honeypot:
+    errors['spam'] = 'Обнаружен спам.'
+    return {}, errors
+
+  name = str(data.get('name', '') or '').strip()
+  address = str(data.get('address', '') or '').strip()
+  working_hours = str(data.get('working_hours', '') or '').strip()
+  description = str(data.get('description', '') or '').strip()
+  contact_email = str(data.get('contact_email', '') or '').strip()
+
+  if len(name) < 2:
+    errors['name'] = 'Название точки должно содержать минимум 2 символа.'
+  elif len(name) > 300:
+    errors['name'] = 'Название точки не должно превышать 300 символов.'
+
+  if len(address) < 5:
+    errors['address'] = 'Укажите более подробный адрес (минимум 5 символов).'
+  elif len(address) > 300:
+    errors['address'] = 'Адрес не должен превышать 300 символов.'
+
+  if len(working_hours) > 300:
+    errors['working_hours'] = 'Время работы не должно превышать 300 символов.'
+
+  if len(description) > 1000:
+    errors['description'] = 'Описание не должно превышать 1000 символов.'
+
+  if contact_email:
+    try:
+      validate_email(contact_email)
+    except ValidationError:
+      errors['contact_email'] = 'Некорректный формат email.'
+
+  lat = None
+  lon = None
+  try:
+    lat = _parse_coordinate(data.get('latitude'), 'latitude', -90, 90)
+  except ValueError as exc:
+    errors['latitude'] = str(exc)
+
+  try:
+    lon = _parse_coordinate(data.get('longitude'), 'longitude', -180, 180)
+  except ValueError as exc:
+    errors['longitude'] = str(exc)
+
+  if ('latitude' not in errors and 'longitude' not in errors) and (
+      (lat is None) ^ (lon is None)
+  ):
+    errors['coordinates'] = (
+        'Укажите обе координаты (широту и долготу) или оставьте оба поля'
+        ' пустыми.'
+    )
+
+  accepted_type_ids = []
+  raw_types = data.get('accepted_types')
+  if raw_types is not None:
+    if not isinstance(raw_types, list):
+      errors['accepted_types'] = 'Поле accepted_types должно быть списком ID.'
+    else:
+      for item_id in raw_types:
+        if (
+            isinstance(item_id, bool)
+            or not isinstance(item_id, int)
+            or item_id <= 0
+        ):
+          errors['accepted_types'] = (
+              'Каждый элемент accepted_types должен быть положительным целым'
+              ' числом.'
+          )
+          break
+        accepted_type_ids.append(item_id)
+
+      if 'accepted_types' not in errors and accepted_type_ids:
+        existing_ids = set(
+            WasteItem.objects.filter(id__in=accepted_type_ids).values_list(
+                'id', flat=True
+            )
+        )
+        missing_ids = [
+            item_id for item_id in accepted_type_ids if item_id not in existing_ids
+        ]
+        if missing_ids:
+          errors['accepted_types'] = (
+              f'Несуществующие ID видов отходов: {missing_ids}.'
+          )
+
+  if errors:
+    return {}, errors
+
+  cleaned = {
+      'name': name,
+      'address': address,
+      'latitude': lat,
+      'longitude': lon,
+      'working_hours': working_hours,
+      'description': description,
+      'contact_email': contact_email,
+      'accepted_type_ids': accepted_type_ids,
+  }
+  return cleaned, {}
+
+
+@require_POST
+def points_suggest(request):
+  """POST /api/points/suggest/
+
+  Приём предложения новой точки приёма с валидацией, защитой от спама и статусом модерации.
+  """
+  ip = _get_client_ip(request)
+
+  # Ограничение частоты запросов: максимум 5 отправок за 10 минут с одного IP
+  rate_key = f'points_suggest_rate:{ip}'
+  attempts = cache.get(rate_key, 0)
+  if attempts >= 5:
+    return JsonResponse(
+        {'error': 'Слишком много запросов. Попробуйте позже.'},
+        status=429,
+        json_dumps_params={'ensure_ascii': False},
+    )
+
+  if request.content_type and 'application/json' in request.content_type:
+    try:
+      payload = json.loads(request.body.decode('utf-8') or '{}')
+    except (UnicodeDecodeError, json.JSONDecodeError):
+      return JsonResponse(
+          {'error': 'Некорректный JSON.'},
+          status=400,
+          json_dumps_params={'ensure_ascii': False},
+      )
+    if not isinstance(payload, dict):
+      return JsonResponse(
+          {'error': 'Ожидается JSON-объект.'},
+          status=400,
+          json_dumps_params={'ensure_ascii': False},
+      )
+  else:
+    payload = request.POST.dict()
+
+  cleaned_data, errors = _validate_suggestion_payload(payload)
+  if errors:
+    return JsonResponse(
+        {'errors': errors},
+        status=400,
+        json_dumps_params={'ensure_ascii': False},
+    )
+
+  # Защита от дубликата с тем же адресом и IP за последние 10 минут
+  ten_minutes_ago = timezone.now() - timezone.timedelta(minutes=10)
+  is_duplicate = PointSuggestion.objects.filter(
+      ip_address=ip,
+      address__iexact=cleaned_data['address'],
+      created_at__gte=ten_minutes_ago,
+  ).exists()
+  if is_duplicate:
+    return JsonResponse(
+        {'error': 'Предложение с таким адресом уже отправлено недавно.'},
+        status=409,
+        json_dumps_params={'ensure_ascii': False},
+    )
+
+  accepted_type_ids = cleaned_data.pop('accepted_type_ids')
+  suggestion = PointSuggestion.objects.create(
+      **cleaned_data,
+      status=PointSuggestion.Status.PENDING,
+      ip_address=ip,
+  )
+  if accepted_type_ids:
+    suggestion.accepted_types.set(accepted_type_ids)
+
+  cache.set(rate_key, attempts + 1, timeout=600)
+
+  return JsonResponse(
+      {
+          'id': suggestion.id,
+          'status': suggestion.status,
+          'message': 'Предложение отправлено на модерацию.',
+      },
+      status=201,
+      json_dumps_params={'ensure_ascii': False},
   )
