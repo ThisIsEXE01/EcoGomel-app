@@ -102,14 +102,15 @@
       align-items: center;
       gap: 10px;
       text-decoration: none;
-      color: var(--logo-color);
+      color: var(--text-main);
       font-weight: 700;
       font-size: 1.2rem;
+      white-space: nowrap;
     }
     
     .logo__icon img {
-      width: 32px;
-      height: 32px;
+      width: 52px;
+      height: 52px;
       object-fit: contain;
       display: block;
     }
@@ -118,6 +119,7 @@
       display: flex;
       align-items: center;
       gap: 24px;
+      white-space: nowrap;
     }
 
     .nav__link {
@@ -155,6 +157,33 @@
     .theme-toggle img {
       width: 20px; height: 20px; object-fit: contain; display: block; pointer-events: none;
     }
+
+    /* Бургер-меню (идентично style.css) */
+    .burger {
+      display: none;
+      flex-direction: column;
+      justify-content: space-between;
+      width: 24px;
+      height: 18px;
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      z-index: 1001;
+      padding: 0;
+    }
+    .burger span {
+      width: 100%;
+      height: 2px;
+      background-color: var(--text-main);
+      transition: all 0.3s ease;
+      border-radius: 2px;
+    }
+    .burger.is-active span:nth-child(1) { transform: translateY(8px) rotate(45deg); }
+    .burger.is-active span:nth-child(2) { opacity: 0; }
+    .burger.is-active span:nth-child(3) { transform: translateY(-8px) rotate(-45deg); }
+
+    /* Блокировка скролла страницы при открытом мобильном меню */
+    body.menu-open { overflow: hidden; }
 
     /* ==================== 3. ДЕСКТОПНАЯ ВЕРСИЯ ==================== */
     .main-layout {
@@ -195,12 +224,16 @@
       outline: none;
     }
 
+    .filters-wrapper {
+      position: relative;
+      border-bottom: 1px solid var(--border-color);
+    }
+
     .filters {
       padding: 12px 14px;
       display: flex;
       flex-wrap: wrap;
       gap: 6px;
-      border-bottom: 1px solid var(--border-color);
     }
 
     .filters button {
@@ -212,20 +245,12 @@
       font-size: 0.8rem;
       cursor: pointer;
       transition: 0.2s;
+      white-space: nowrap;
     }
 
-    .filters button:hover {
-      border-color: var(--accent-light);
-      color: var(--text-main);
-    }
+    .filters button:hover { border-color: var(--accent-light); color: var(--text-main); }
+    .filters button.active { background-color: var(--accent-green); color: #fff; border-color: var(--accent-green); }
 
-    .filters button.active {
-      background-color: var(--accent-green);
-      color: #fff;
-      border-color: var(--accent-green);
-    }
-
-    /* Сетка 2 на 2 для кнопок */
     .actions {
       padding: 10px 14px;
       display: grid;
@@ -298,7 +323,6 @@
     .popup-desc { font-size: 0.75rem; color: var(--text-muted); margin-top: 6px; }
     .popup-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 6px; }
     .popup-tags span { padding: 2px 6px; background-color: var(--tag-bg); color: var(--accent-light); border-radius: 3px; font-size: 0.7rem; }
-    
     .popup-delete { margin-top: 8px; padding: 4px 10px; background-color: #dc2626; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 0.7rem; width: 100%; transition: background 0.2s; }
     .popup-delete:hover { background-color: #b91c1c; }
 
@@ -333,41 +357,116 @@
     @keyframes spin { to { transform: rotate(360deg); } }
     .error-text { color: #ef4444; margin-bottom: 12px; font-weight: 600; }
     .btn-retry { background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); padding: 8px 16px; border-radius: var(--radius-sm); cursor: pointer; transition: 0.2s; }
-    .btn-retry:hover { background: var(--bg-card-hover); }
+    .btn-retry:hover { background-color: var(--bg-card-hover); }
 
     #toggleListBtn { display: none; width: 100%; padding: 12px; background-color: var(--bg-card-hover); border: none; border-bottom: 1px solid var(--border-color); color: var(--text-main); font-weight: 600; cursor: pointer; text-align: center; font-size: 0.9rem; transition: background-color 0.2s; }
     #toggleListBtn:hover { background-color: var(--border-color); }
 
+    /* MVP: админские элементы скрыты до релиза админки. */
+    [data-admin-only] { display: none !important; }
+
     /* ==================== 8. МОБИЛЬНАЯ ВЕРСИЯ ==================== */
     @media (max-width: 800px) {
-      .header__container { height: 60px; }
-      .nav { gap: 15px; }
-      .nav__link { font-size: 0.85rem; }
-      
-      .main-layout { height: calc(100vh - 60px); position: relative; display: block; }
-
+      .main-layout { position: relative; display: block; }
       #map { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
+      
+      /* ФИКС: Обертка выпускает список поверх карты */
+      #sidebar { 
+        position: absolute; top: 0; left: 0; width: 100%; 
+        pointer-events: none; z-index: 1000; 
+      }
 
-      #sidebar { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: transparent; border: none; display: flex; flex-direction: column; pointer-events: none; z-index: 1000; }
-
-      .sidebar-top { pointer-events: auto; background: var(--bg-card); border-radius: 0 0 16px 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); flex-shrink: 0; z-index: 2; }
+      .sidebar-top { 
+        pointer-events: auto; background: var(--bg-card); 
+        border-radius: 0 0 16px 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); 
+        position: relative; z-index: 2;
+      }
 
       .search-box { padding: 10px 14px; }
+      
       .filters { padding: 10px 14px; flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; }
       .filters::-webkit-scrollbar { display: none; }
-      .filters button { white-space: nowrap; }
+      
+      .filters-wrapper::before, .filters-wrapper::after {
+        content: ''; position: absolute; top: 0; bottom: 0; width: 45px; pointer-events: none; z-index: 2; transition: opacity 0.3s ease; opacity: 0;
+      }
+      .filters-wrapper::before { left: 0; background: linear-gradient(to right, rgba(100, 116, 139, 0.3) 0%, transparent 100%); }
+      .filters-wrapper::after { right: 0; background: linear-gradient(to left, rgba(100, 116, 139, 0.3) 0%, transparent 100%); }
+      .filters-wrapper.show-left::before { opacity: 1; }
+      .filters-wrapper.show-right::after { opacity: 1; }
+
       .actions { padding: 10px 14px; gap: 8px; }
       .actions button { padding: 10px 8px; font-size: 0.8rem; }
 
       #toggleListBtn { display: block; }
 
-      #points-list { pointer-events: auto; background: var(--bg-card); flex: 0 1 auto; max-height: 0; opacity: 0; overflow: hidden; padding: 0; transition: max-height 0.3s ease-in-out, opacity 0.3s ease; border-radius: 0 0 16px 16px; z-index: 1; }
-      #points-list.open { flex: 1; max-height: 100%; opacity: 1; overflow-y: auto; padding: 8px 0; box-shadow: 0 4px 15px rgba(0,0,0,0.3); border-radius: 0; }
+      /* ФИКС: Список выпадает поверх карты */
+      #points-list {
+        pointer-events: auto;
+        position: absolute;
+        top: 100%; /* Появляется прямо под шапкой фильтров */
+        left: 0;
+        width: 100%;
+        background: var(--bg-card);
+        max-height: 0;
+        opacity: 0;
+        overflow: hidden;
+        transition: max-height 0.3s ease-in-out, opacity 0.3s ease;
+        border-radius: 0 0 16px 16px;
+        z-index: 1;
+      }
+      
+      #points-list.open {
+        max-height: 60vh; /* Ограничение высоты, чтобы карта была видна снизу */
+        opacity: 1;
+        overflow-y: auto;
+        padding: 8px 0;
+        box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+        border-radius: 0;
+      }
+      
       .point-card { padding: 14px 18px; }
     }
 
-    /* MVP: админские элементы скрыты до релиза админки. */
-    [data-admin-only] { display: none !important; }
+    /* ==================== 9. БУРГЕР-МЕНЮ И ШАПКА (как в style.css) ==================== */
+    @media (max-width: 768px) {
+      /* Шапка выше боковой панели (z-index 1000), чтобы меню открывалось поверх */
+      .header { z-index: 1100; }
+      .burger { display: flex; }
+      .nav--collapsible {
+        position: fixed;
+        top: 70px;
+        left: 0;
+        width: 100%;
+        background-color: var(--bg-card);
+        flex-direction: column;
+        padding: 20px;
+        box-shadow: 0 10px 15px rgba(0,0,0,0.1);
+        transform: translateY(-150%);
+        transition: transform 0.3s ease;
+        z-index: 1000;
+        gap: 16px;
+        border-bottom: 1px solid var(--border-color);
+      }
+      .nav--collapsible.is-open { transform: translateY(0); }
+      .nav--collapsible .nav__link {
+        font-size: 1.1rem;
+        width: 100%;
+        text-align: center;
+        padding: 8px 0;
+      }
+    }
+
+    @media (max-width: 400px) {
+      .header__container { padding: 0 10px; height: 60px; }
+      .logo img { width: 36px; height: 36px; }
+      .logo__icon img { width: 36px; height: 36px; }
+      .logo { font-size: 1rem; }
+      .theme-toggle { padding: 4px 8px; }
+      .theme-toggle img { width: 16px; height: 16px; }
+      .nav--collapsible { top: 60px; }
+      .main-layout { height: calc(100vh - 60px); }
+    }
   </style>
 </head>
 
@@ -379,7 +478,14 @@
         <span class="logo__icon"><img src="logo.svg" alt="Логотип"></span>
         <span class="logo__text">ЭкоГомель</span>
       </a>
-      <nav class="nav">
+      
+      <button class="burger" id="burger-btn" aria-label="Открыть меню" aria-controls="nav-menu" aria-expanded="false">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+
+      <nav class="nav nav--collapsible" id="nav-menu">
         <a href="index.html" class="nav__link">Поиск</a>
         <a href="map.html" class="nav__link active">Карта</a>
         <a href="about_project.html" class="nav__link">О проекте</a>
@@ -396,14 +502,16 @@
           <input type="text" id="searchInput" placeholder="Поиск пункта или адреса" />
         </div>
 
-        <div class="filters" id="filtersContainer">
-          <button class="active" data-filter="all">Все</button>
-          <button data-filter="Пластик">Пластик</button>
-          <button data-filter="Стекло">Стекло</button>
-          <button data-filter="Макулатура">Макулатура</button>
-          <button data-filter="Батарейки">Батарейки</button>
-          <button data-filter="Электроника">Электроника</button>
-          <button data-filter="Металлолом">Металлолом</button>
+        <div class="filters-wrapper" id="filtersWrapper">
+          <div class="filters" id="filtersContainer">
+            <button class="active" data-filter="all">Все</button>
+            <button data-filter="Пластик">Пластик</button>
+            <button data-filter="Стекло">Стекло</button>
+            <button data-filter="Макулатура">Макулатура</button>
+            <button data-filter="Батарейки">Батарейки</button>
+            <button data-filter="Электроника">Электроника</button>
+            <button data-filter="Металлолом">Металлолом</button>
+          </div>
         </div>
 
         <div class="actions">
@@ -414,7 +522,7 @@
           <button id="clearAllBtn" data-admin-only>🗑 Удалить все</button>
         </div>
 
-        <button id="toggleListBtn">Показать список пунктов</button>
+        <button id="toggleListBtn">Показать список</button>
       </div>
 
       <div id="points-list"></div>
@@ -481,11 +589,8 @@
   </script>
 
   <script>
-    /* ============================================================
-       ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ И НАСТРОЙКИ API
-       ============================================================ */
     const NEAREST_RADIUS = 3000; 
-    const API_POINTS_URL = `${API_BASE_URL}/points/`; // Базовый URL из api.js
+    const API_POINTS_URL = `${API_BASE_URL}/points/`;
 
     let points = [];
     const markerMap = {};
@@ -497,33 +602,18 @@
     let filterByDistance = false, isLocating = false;
     let isDataLoaded = false;
 
-    /* ============================================================
-       КАРТА
-       ============================================================ */
     const map = L.map('map', { zoomControl: false, attributionControl: false }).setView([52.4345, 30.9754], 12);
-    L.tileLayer('https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', {
-      maxZoom: 19,
-      subdomains: 'abc',
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-    }).addTo(map);
+    L.tileLayer('https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', { maxZoom: 19, subdomains: 'abc' }).addTo(map);
     L.control.attribution({ position: 'bottomright', prefix: '' }).addAttribution('🌿 EcoGomel').addTo(map);
     L.control.zoom({ position: 'bottomright' }).addTo(map);
 
     const greenIcon = L.divIcon({ className: '', html: '<div class="custom-marker"></div>', iconSize: [18, 18], iconAnchor: [9, 9], popupAnchor: [0, -10] });
     const userIcon = L.divIcon({ className: '', html: '<div class="user-marker"></div>', iconSize: [18, 18], iconAnchor: [9, 9], popupAnchor: [0, -12] });
 
-    /* ============================================================
-       1. ПОЛУЧЕНИЕ ДАННЫХ (GET)
-       ============================================================ */
     async function fetchPointsFromAPI() {
       const listEl = document.getElementById('points-list');
       const toggleListBtn = document.getElementById('toggleListBtn');
-      
-      listEl.innerHTML = `
-        <div class="state-container">
-          <div class="spinner"></div>
-          <div>Загрузка пунктов...</div>
-        </div>`;
+      listEl.innerHTML = `<div class="state-container"><div class="spinner"></div><div>Загрузка...</div></div>`;
       toggleListBtn.textContent = 'Загрузка...';
       isDataLoaded = false;
 
@@ -540,67 +630,37 @@
         syncMarkers();
 
       } catch (error) {
-        console.error('Ошибка загрузки точек:', error);
-        listEl.innerHTML = `
-          <div class="state-container">
-            <div class="error-text">Не удалось загрузить данные</div>
-            <div style="font-size: 0.8rem; margin-bottom: 16px;">Проверьте подключение к интернету и попробуйте ещё раз.</div>
-            <button class="btn-retry" onclick="fetchPointsFromAPI()">Повторить попытку</button>
-          </div>`;
-        toggleListBtn.textContent = 'Ошибка загрузки';
+        listEl.innerHTML = `<div class="state-container"><div class="error-text">Не удалось загрузить данные</div><button class="btn-retry" onclick="fetchPointsFromAPI()">Повторить</button></div>`;
+        toggleListBtn.textContent = 'Ошибка';
       }
     }
 
-    /* ============================================================
-       2. ДОБАВЛЕНИЕ И УДАЛЕНИЕ (POST / DELETE)
-       ============================================================ */
     async function addPointToAPI(newPoint) {
       try {
-        const response = await fetch(API_POINTS_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(newPoint)
-        });
-        if (!response.ok) throw new Error('Ошибка сервера');
+        const response = await fetch(API_POINTS_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(newPoint) });
+        if (!response.ok) throw new Error();
         const savedPoint = await response.json();
-        
         points.push(savedPoint);
         addMarker(savedPoint);
-        renderList();
-        syncMarkers();
+        renderList(); syncMarkers();
         return true;
-      } catch (error) {
-        alert('Не удалось сохранить точку: ' + error.message);
-        return false;
-      }
+      } catch (error) { alert('Ошибка сохранения'); return false; }
     }
 
     async function deletePointFromAPI(id) {
       try {
-        const response = await fetch(`${API_POINTS_URL}${id}/`, { method: 'DELETE' });
-        if (!response.ok) throw new Error('Ошибка сервера');
-        
+        await fetch(`${API_POINTS_URL}${id}/`, { method: 'DELETE' });
         points = points.filter(p => p.id !== id);
-        if (markerMap[id]) {
-          map.removeLayer(markerMap[id]);
-          delete markerMap[id];
-        }
-        renderList();
-        syncMarkers();
-      } catch (error) {
-        alert('Не удалось удалить точку: ' + error.message);
-      }
+        if (markerMap[id]) { map.removeLayer(markerMap[id]); delete markerMap[id]; }
+        renderList(); syncMarkers();
+      } catch (error) { alert('Ошибка удаления'); }
     }
 
-    // Функция для вызова из попапа маркера
     window.deletePoint = async function(id) {
-      if (!confirm('Вы уверены, что хотите удалить эту точку?')) return;
+      if (!confirm('Удалить точку?')) return;
       await deletePointFromAPI(id);
     };
 
-    /* ============================================================
-       3. ОТРИСОВКА И ФИЛЬТРАЦИЯ
-       ============================================================ */
     function syncMarkers() {
       points.forEach(p => {
         const types = p.accepted_types || [];
@@ -610,17 +670,63 @@
 
         const marker = markerMap[p.id];
         if (marker) {
-          if (matchType && matchText && matchDistance) {
-            if (!map.hasLayer(marker)) map.addLayer(marker);
-          } else {
-            if (map.hasLayer(marker)) map.removeLayer(marker);
-          }
+          if (matchType && matchText && matchDistance) { if (!map.hasLayer(marker)) map.addLayer(marker); } 
+          else { if (map.hasLayer(marker)) map.removeLayer(marker); }
         }
       });
     }
 
     const listEl = document.getElementById('points-list');
     const toggleListBtn = document.getElementById('toggleListBtn');
+
+    let visibleCount = 0;
+
+    function isMobile() { return window.innerWidth <= 800; }
+
+    // Текст кнопки: «Скрыть список» / «Показать список (N)»
+    function updateToggleText() {
+      if (!isDataLoaded) return;
+      if (listEl.classList.contains('open')) toggleListBtn.textContent = 'Скрыть список';
+      else toggleListBtn.textContent = visibleCount ? `Показать список (${visibleCount})` : 'Ничего не найдено';
+    }
+
+    function openListOnMobile() {
+      if (!isMobile() || listEl.classList.contains('open')) return;
+      listEl.classList.add('open');
+      updateToggleText();
+    }
+
+    function closeListOnMobile() {
+      if (!isMobile() || !listEl.classList.contains('open')) return;
+      listEl.classList.remove('open');
+      updateToggleText();
+    }
+
+    // Высота верхней панели, перекрывающей карту на мобильных
+    function getTopInset() {
+      if (!isMobile()) return 0;
+      const top = document.querySelector('.sidebar-top');
+      return top ? top.offsetHeight : 0;
+    }
+
+    // Автопан попапа не должен уводить его под верхнюю панель
+    function updatePopupPadding() {
+      const inset = getTopInset();
+      Object.values(markerMap).forEach(m => {
+        const popup = m.getPopup();
+        if (popup) popup.options.autoPanPaddingTopLeft = L.point(10, inset + 10);
+      });
+    }
+    window.addEventListener('resize', updatePopupPadding);
+
+    // На сколько px опустить маркер ниже центра карты (~200px, но с учётом экрана и панели)
+    function getMarkerOffsetY() {
+      const mapH = map.getSize().y;
+      const POPUP_SPACE = 170; // примерная высота попапа со стрелкой
+      const needed = getTopInset() + POPUP_SPACE - mapH / 2;
+      const maxOffset = mapH / 2 - 56; // маркер не должен уходить за нижний край
+      return Math.max(0, Math.min(Math.max(200, needed), maxOffset));
+    }
 
     function formatDistance(meters) { return meters < 1000 ? Math.round(meters) + ' м' : (meters / 1000).toFixed(1) + ' км'; }
 
@@ -635,29 +741,19 @@
         return matchType && matchText && matchDistance;
       });
 
-      if (userLatLng) {
-        filtered.sort((a, b) => {
-          const distA = typeof a._distance === 'number' ? a._distance : Infinity;
-          const distB = typeof b._distance === 'number' ? b._distance : Infinity;
-          return distA - distB;
-        });
-      } else {
-        filtered.sort((a, b) => a.name.localeCompare(b.name));
-      }
+      if (userLatLng) filtered.sort((a, b) => (a._distance || Infinity) - (b._distance || Infinity));
+      else filtered.sort((a, b) => a.name.localeCompare(b.name));
 
+      visibleCount = filtered.length;
       listEl.innerHTML = '';
 
       if (filtered.length === 0) {
-        listEl.innerHTML = `
-          <div class="state-container">
-            <div style="font-size: 2rem; margin-bottom: 10px;">🔍</div>
-            <div>По вашему запросу ничего не найдено.</div>
-          </div>`;
-        toggleListBtn.textContent = 'Ничего не найдено';
+        listEl.innerHTML = `<div class="state-container"><div style="font-size: 2rem;">🔍</div><div>Ничего не найдено</div></div>`;
+        updateToggleText();
         return;
       }
 
-      toggleListBtn.textContent = `Показать список пунктов (${filtered.length})`;
+      updateToggleText();
 
       filtered.forEach(p => {
         const card = document.createElement('div');
@@ -674,15 +770,18 @@
         ${distanceHtml}`;
 
         card.addEventListener('click', () => {
+          // Сначала закрываем список, затем центрируем карту со смещением вниз
+          closeListOnMobile();
           if (markerMap[p.id]) {
             markerMap[p.id].openPopup();
-            map.setView([p.latitude, p.longitude], 16);
+
+            const targetZoom = 16;
+            const latlng = L.latLng(parseFloat(p.latitude), parseFloat(p.longitude));
+            const point = map.project(latlng, targetZoom);
+            point.y -= getMarkerOffsetY();
+            map.setView(map.unproject(point, targetZoom), targetZoom);
           }
           highlightCard(p.id);
-          if (window.innerWidth <= 800) {
-            listEl.classList.remove('open');
-            toggleListBtn.textContent = `Показать список пунктов (${filtered.length})`;
-          }
         });
         listEl.appendChild(card);
       });
@@ -691,22 +790,15 @@
     function addMarker(p) {
       const marker = L.marker([parseFloat(p.latitude), parseFloat(p.longitude)], { icon: greenIcon }).addTo(map);
       marker.bindPopup(buildPopup(p));
-      marker.on('click', () => highlightCard(p.id));
+      marker.getPopup().options.autoPanPaddingTopLeft = L.point(10, getTopInset() + 10);
+      marker.on('click', () => { highlightCard(p.id); closeListOnMobile(); });
       markerMap[p.id] = marker;
     }
 
     function buildPopup(p) {
       const tags = (p.accepted_types || []).map(t => `<span>${t}</span>`).join('');
       const distLine = (typeof p._distance === 'number') ? `<div style="font-size:0.72rem;color:#3b82f6;font-weight:600;margin-top:6px;">📏 ${formatDistance(p._distance)} от вас</div>` : '';
-      return `
-      <div style="min-width:220px">
-        <div class="popup-title">${p.name}</div>
-        <div class="popup-address">${p.address}</div>
-        <div class="popup-tags">${tags}</div>
-        <div class="popup-hours">${p.working_hours}</div>
-        ${distLine}
-        <button class="popup-delete" data-admin-only onclick="deletePoint(${p.id})">Удалить точку</button>
-      </div>`;
+      return `<div style="min-width:220px"><div class="popup-title">${p.name}</div><div class="popup-address">${p.address}</div><div class="popup-tags">${tags}</div><div class="popup-hours">${p.working_hours}</div>${distLine}<button class="popup-delete" data-admin-only onclick="deletePoint(${p.id})">Удалить точку</button></div>`;
     }
 
     function highlightCard(id) {
@@ -715,17 +807,16 @@
       if (card) card.classList.add('active');
     }
 
-    /* ============================================================
-       4. ЛОГИКА МОДАЛЬНОГО ОКНА (ДОБАВЛЕНИЕ)
-       ============================================================ */
     const addModal = document.getElementById('addModal');
     const addModeBtn = document.getElementById('addModeBtn');
 
-    addModeBtn.addEventListener('click', function () {
-      addMode = !addMode;
-      this.classList.toggle('active', addMode);
-      this.textContent = addMode ? '📍 Кликните на карту' : '➕ Добавить';
-    });
+    if (addModeBtn) {
+      addModeBtn.addEventListener('click', function () {
+        addMode = !addMode;
+        this.classList.toggle('active', addMode);
+        this.textContent = addMode ? '📍 Кликните на карту' : '➕ Добавить';
+      });
+    }
 
     map.on('click', function (e) {
       if (!addMode) return;
@@ -740,68 +831,37 @@
     document.getElementById('btnCancelModal').addEventListener('click', () => {
       addModal.classList.remove('active');
       addMode = false;
-      addModeBtn.classList.remove('active');
-      addModeBtn.textContent = '➕ Добавить';
-    });
-
-    document.getElementById('btnSaveModal').addEventListener('click', async () => {
-      const name = document.getElementById('m_name').value.trim();
-      if (!name) { alert('Введите название!'); return; }
-
-      const newPoint = {
-        name: name,
-        address: document.getElementById('m_address').value.trim() || '—',
-        latitude: tempLatLng.lat,
-        longitude: tempLatLng.lng,
-        accepted_types: document.getElementById('m_types').value.split(',').map(s => s.trim()).filter(Boolean),
-        working_hours: document.getElementById('m_hours').value.trim() || '—',
-        description: ''
-      };
-
-      const success = await addPointToAPI(newPoint);
-      if (success) {
-        addModal.classList.remove('active');
-        addMode = false;
+      if (addModeBtn) {
         addModeBtn.classList.remove('active');
         addModeBtn.textContent = '➕ Добавить';
       }
     });
 
-    /* ============================================================
-       5. УДАЛЕНИЕ ВСЕХ ТОЧЕК
-       ============================================================ */
-    document.getElementById('clearAllBtn').addEventListener('click', async function () {
-      if (!confirm('Вы уверены, что хотите удалить ВСЕ точки с карты? Это действие нельзя отменить.')) return;
-      
-      const btn = this;
-      btn.textContent = 'Удаление...';
-      btn.disabled = true;
-
-      try {
-        // Удаляем каждую точку через API
-        for (const p of points) {
-          await fetch(`${API_POINTS_URL}${p.id}/`, { method: 'DELETE' });
+    document.getElementById('btnSaveModal').addEventListener('click', async () => {
+      const name = document.getElementById('m_name').value.trim();
+      if (!name) { alert('Введите название!'); return; }
+      const newPoint = { name, address: document.getElementById('m_address').value.trim() || '—', latitude: tempLatLng.lat, longitude: tempLatLng.lng, accepted_types: document.getElementById('m_types').value.split(',').map(s => s.trim()).filter(Boolean), working_hours: document.getElementById('m_hours').value.trim() || '—', description: '' };
+      const success = await addPointToAPI(newPoint);
+      if (success) {
+        addModal.classList.remove('active');
+        addMode = false;
+        if (addModeBtn) {
+          addModeBtn.classList.remove('active');
+          addModeBtn.textContent = '➕ Добавить';
         }
-        points = [];
-        Object.values(markerMap).forEach(m => map.removeLayer(m));
-        Object.keys(markerMap).forEach(k => delete markerMap[k]);
-        renderList();
-        syncMarkers();
-      } catch (error) {
-        alert('Ошибка при удалении всех точек: ' + error.message);
-      } finally {
-        btn.textContent = '🗑 Удалить все';
-        btn.disabled = false;
       }
     });
 
-    /* ============================================================
-       6. ФИЛЬТРЫ И ПОИСК
-       ============================================================ */
+    document.getElementById('clearAllBtn').addEventListener('click', async function () {
+      if (!confirm('Удалить ВСЕ точки?')) return;
+      for (const p of points) await fetch(`${API_POINTS_URL}${p.id}/`, { method: 'DELETE' });
+      points = []; Object.values(markerMap).forEach(m => map.removeLayer(m)); Object.keys(markerMap).forEach(k => delete markerMap[k]);
+      renderList(); syncMarkers();
+    });
+
     document.querySelectorAll('#filtersContainer button').forEach(btn => {
       btn.addEventListener('click', () => {
         const filter = btn.dataset.filter;
-        
         if (activeFilter === filter && filter !== 'all') {
           activeFilter = 'all';
           document.querySelectorAll('#filtersContainer button').forEach(b => b.classList.remove('active'));
@@ -811,24 +871,41 @@
           document.querySelectorAll('#filtersContainer button').forEach(b => b.classList.remove('active'));
           btn.classList.add('active');
         }
-        renderList();
-        syncMarkers();
+        renderList(); syncMarkers();
       });
     });
 
     document.getElementById('searchInput').addEventListener('input', e => {
       searchText = e.target.value.trim().toLowerCase();
-      renderList();
-      syncMarkers();
+      renderList(); syncMarkers();
+      openListOnMobile();
+    });
+
+    document.getElementById('searchInput').addEventListener('focus', () => {
+      openListOnMobile();
     });
 
     toggleListBtn.addEventListener('click', () => {
       listEl.classList.toggle('open');
+      updateToggleText();
     });
 
-    /* ============================================================
-       7. ГЕОЛОКАЦИЯ
-       ============================================================ */
+    const filtersWrapper = document.getElementById('filtersWrapper');
+    const filtersContainer = document.getElementById('filtersContainer');
+    function updateFilterShadows() {
+      if (!filtersContainer || !filtersWrapper) return;
+      if (window.innerWidth > 800) { 
+        filtersWrapper.classList.remove('show-left', 'show-right'); return; 
+      }
+      const scrollLeft = filtersContainer.scrollLeft, scrollWidth = filtersContainer.scrollWidth, clientWidth = filtersContainer.clientWidth;
+      if (scrollLeft > 0) filtersWrapper.classList.add('show-left'); else filtersWrapper.classList.remove('show-left');
+      if (scrollLeft + clientWidth < scrollWidth - 2) filtersWrapper.classList.add('show-right'); else filtersWrapper.classList.remove('show-right');
+    }
+    filtersContainer.addEventListener('scroll', updateFilterShadows);
+    window.addEventListener('resize', updateFilterShadows);
+    setTimeout(updateFilterShadows, 200);
+    window.addEventListener('load', () => { updateFilterShadows(); updatePopupPadding(); });
+
     const geoBtn = document.getElementById('geoBtn');
     const nearestBtn = document.getElementById('nearestBtn');
 
@@ -841,72 +918,75 @@
     }
 
     geoBtn.addEventListener('click', () => {
-      if (userLatLng) { 
-        map.panTo(userLatLng); 
-        if (userMarker) userMarker.openPopup();
-      } else if (!isLocating) { 
-        requestLocation(); 
-      }
+      if (userLatLng) { map.panTo(userLatLng); if (userMarker) userMarker.openPopup(); } 
+      else if (!isLocating) { requestLocation(); }
     });
 
     nearestBtn.addEventListener('click', () => {
       filterByDistance = !filterByDistance;
       nearestBtn.classList.toggle('active', filterByDistance);
-      if (filterByDistance && !userLatLng && !isLocating) { 
-        requestLocation(); 
-      } else {
-        renderList();
-        syncMarkers();
-      }
+      if (filterByDistance && !userLatLng && !isLocating) requestLocation();
+      else { renderList(); syncMarkers(); }
     });
 
     map.on('locationfound', function (e) {
-      isLocating = false; 
-      geoBtn.classList.remove('loading');
-      geoBtn.textContent = '📍 Я здесь';
-      userLatLng = e.latlng;
-
+      isLocating = false; geoBtn.classList.remove('loading'); geoBtn.textContent = '📍 Я здесь'; userLatLng = e.latlng;
       map.panTo(e.latlng);
-
       if (!userMarker) {
         userMarker = L.marker(e.latlng, { icon: userIcon, zIndexOffset: 1000 }).addTo(map);
         userCircle = L.circle(e.latlng, { radius: e.accuracy, color: '#2563eb', fillColor: '#3b82f6', fillOpacity: 0.12, weight: 1 }).addTo(map);
       } else {
-        userMarker.setLatLng(e.latlng);
-        userCircle.setLatLng(e.latlng);
-        userCircle.setRadius(e.accuracy);
+        userMarker.setLatLng(e.latlng); userCircle.setLatLng(e.latlng); userCircle.setRadius(e.accuracy);
       }
-
-      points.forEach(p => { 
-        p._distance = map.distance(e.latlng, [parseFloat(p.latitude), parseFloat(p.longitude)]); 
-      });
-      
-      points.forEach(p => { 
-        if (markerMap[p.id]) markerMap[p.id].setPopupContent(buildPopup(p)); 
-      });
-
-      renderList();
-      syncMarkers();
+      points.forEach(p => { p._distance = map.distance(e.latlng, [parseFloat(p.latitude), parseFloat(p.longitude)]); });
+      points.forEach(p => { if (markerMap[p.id]) markerMap[p.id].setPopupContent(buildPopup(p)); });
+      renderList(); syncMarkers();
     });
 
     map.on('locationerror', function (e) {
-      isLocating = false; 
-      geoBtn.classList.remove('loading');
-      geoBtn.textContent = '📍 Я здесь';
-      if (filterByDistance) { 
-        filterByDistance = false; 
-        nearestBtn.classList.remove('active'); 
-        renderList(); 
-        syncMarkers();
-      }
+      isLocating = false; geoBtn.classList.remove('loading'); geoBtn.textContent = '📍 Я здесь';
+      if (filterByDistance) { filterByDistance = false; nearestBtn.classList.remove('active'); renderList(); syncMarkers(); }
     });
 
-    /* ============================================================
-       8. ЗАПУСК
-       ============================================================ */
-    (function init() {
-      fetchPointsFromAPI(); 
-    })();
+    (function init() { fetchPointsFromAPI(); })();
+  </script>
+
+  <!-- СКРИПТ БУРГЕР-МЕНЮ (идентичен index.html) -->
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const burgerBtn = document.getElementById('burger-btn');
+      const navMenu = document.getElementById('nav-menu');
+      if (!burgerBtn || !navMenu) return;
+
+      const setOpen = (open) => {
+        burgerBtn.classList.toggle('is-active', open);
+        navMenu.classList.toggle('is-open', open);
+        burgerBtn.setAttribute('aria-expanded', String(open));
+        burgerBtn.setAttribute('aria-label', open ? 'Закрыть меню' : 'Открыть меню');
+        document.body.classList.toggle('menu-open', open);
+      };
+
+      burgerBtn.addEventListener('click', () => {
+        setOpen(!navMenu.classList.contains('is-open'));
+      });
+
+      navMenu.querySelectorAll('.nav__link').forEach((link) => {
+        link.addEventListener('click', () => setOpen(false));
+      });
+
+      document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && navMenu.classList.contains('is-open')) {
+          setOpen(false);
+          burgerBtn.focus();
+        }
+      });
+
+      document.addEventListener('click', (event) => {
+        if (!navMenu.classList.contains('is-open')) return;
+        if (navMenu.contains(event.target) || burgerBtn.contains(event.target)) return;
+        setOpen(false);
+      });
+    });
   </script>
 </body>
 </html>
